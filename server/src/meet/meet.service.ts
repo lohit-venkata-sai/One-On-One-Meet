@@ -15,27 +15,29 @@ export class MeetService {
     return { meetId };
   }
   joinMeet(meetId: string, identity: string) {
-    const count = this.rooms.get(meetId);
+    const count: number = this.rooms.get(meetId) ?? 0;
     if (!identity) {
-      return { status: 401, message: 'identity is required' };
+      return { status: 400, message: 'identity is required' };
     }
-    if (!count) {
-      return { status: 404, message: 'room doest exists' };
+
+    if (!this.rooms.has(meetId)) {
+      return { status: 404, message: 'meet doest exists' };
     }
     if (count >= 2) {
-      return { status: 401, messsage: 'room is full' };
+      return { status: 409, messsage: 'room is full' };
     }
     this.rooms.set(meetId, count + 1);
     const { AccessToken } = jwt;
     const token = new AccessToken(
       process.env.TWILIO_ACCOUNT_SID!,
-      process.env.TWILIO_API_KEY!,
-      process.env.TWILIO_SECRET!,
+      process.env.TWILIO_API_SID!,
+      process.env.TWILIO_API_SECRET!,
       {
         identity,
         ttl: 3600,
       },
     );
+    console.log('this is count', count + 1);
     token.addGrant(new VideoGrant({ room: meetId }));
     return {
       token: token.toJwt(),
