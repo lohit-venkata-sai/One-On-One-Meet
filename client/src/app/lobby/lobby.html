@@ -1,0 +1,74 @@
+<div class="bg-[#1E2024] p-4 sm:p-6 gap-6 rounded-md flex flex-col max-w-5xl mx-auto">
+    <div>
+        <p class="text-sm sm:text-base">
+            Hey {{name}}, Welcome to Your {{title}}
+        </p>
+    </div>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <span class="flex flex-col gap-1">
+            <span class="text-sm opacity-80">Title</span>
+            <span class="font-semibold">{{title}}</span>
+        </span>
+
+        <span class="flex flex-col gap-1">
+            <span class="text-sm opacity-80">Expert name</span>
+            <span class="font-semibold">{{expert_name}}</span>
+        </span>
+
+        <span class="flex flex-col gap-1">
+            <span class="text-sm opacity-80">Experience</span>
+            <span class="font-semibold">{{experience}}</span>
+        </span>
+
+        <span class="flex flex-col gap-1">
+            <span class="text-sm opacity-80">Duration</span>
+            <span class="font-semibold">{{duration}}</span>
+        </span>
+    </div>
+
+    <div class="p-4 sm:p-6 gap-4 rounded-md flex flex-col bg-[#23262B]">
+        <h2 class="font-semibold text-base sm:text-lg">
+            Instructions
+        </h2>
+
+        <ul class="list-disc pl-5 space-y-2 text-sm sm:text-base">
+            <li>Test your audio and video. Adjust the settings if necessary.</li>
+            <li>Sit in a well-lit area with your face clearly visible and no background noise.</li>
+            <li>Avoid having moving objects in the background.</li>
+            <li>Maintain a stable internet connection.</li>
+            <li>Ensure your device is charged or plugged in to avoid any interruptions.</li>
+            <li>
+                Please remain in the meeting room for at least 10 minutes. This time is
+                necessary to capture your attendance, so stay even if the other person has
+                not yet attended.
+            </li>
+            <li>
+                The whiteboard in the meeting room works both ways; any changes you make are
+                visible to the other person.
+            </li>
+            <li>
+                The code console is limited to your end. Please share your screen to show
+                your code console to the other person.
+            </li>
+            <li>
+                Keep an eye on the time; you will be prompted 2 minutes before the meeting
+                ends.
+            </li>
+        </ul>
+
+        <!-- Footer -->
+        <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
+            <div class="flex gap-2 items-start sm:items-center">
+                <input id="checkbox" (click)="handleIsAgreed()" name="checkbox" type="checkbox" class="mt-1 sm:mt-0">
+                <label for="checkbox"  class="text-sm sm:text-base">
+                    I have read and understood all instructions
+                </label>
+            </div>
+
+            <button [disabled]="!isAgreed" (click)="handleClick()" class=" cursor-pointer py-2.5 px-5 bg-[#F0EBFF] rounded-md text-[#6834FF] w-full sm:w-auto text-center font-medium">
+                Next &gt;
+            </button>
+        </div>
+    </div>
+</div>

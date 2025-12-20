@@ -1,0 +1,112 @@
+<div class=" grid grid-cols-2 gap-5 w-full">
+    <!-- left section -->
+    <div class="flex flex-col gap-5">
+        <div class="p-6 h-80">
+            <img src="https://placehold.co/500x400" class="" alt="alt text">
+        </div>
+        <div class="bg-[#1E2024] rounded-xl p-6 text-gray-200 space-y-6">
+        
+            <!-- Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        
+                <!-- Speakers -->
+                <div class="space-y-2">
+                    <label class="text-sm opacity-80 text-[12px]">Speakers</label>
+                    <select class="w-full bg-[#2A2D32] text-sm rounded-lg px-4 py-3 pr-10
+                       focus:outline-none focus:ring-2 focus:ring-[#6834FF]
+                       appearance-none cursor-pointer">
+                        <option>Default</option>
+                        <option>Headphones</option>
+                        <option>External Speaker</option>
+                    </select>
+                </div>
+        
+                <!-- Microphone -->
+                <div class="space-y-2">
+                    <label class="text-sm opacity-80 text-[12px]">Microphone</label>
+                    <select class="w-full bg-[#2A2D32] text-sm rounded-lg px-4 py-3 pr-10
+                       focus:outline-none focus:ring-2 focus:ring-[#6834FF]
+                       appearance-none cursor-pointer">
+                        <option>Default</option>
+                        <option>Built-in Mic</option>
+                        <option>External Mic</option>
+                    </select>
+                </div>
+        
+                <!-- Camera -->
+                <div class="space-y-2">
+                    <label class="text-sm opacity-80 text-[12px]">Camera</label>
+                    <select class="w-full bg-[#2A2D32] text-sm rounded-lg px-4 py-3 pr-10
+                       focus:outline-none  focus:ring-2 focus:ring-[#6834FF]
+                       appearance-none cursor-pointer">
+                        <option>Default</option>
+                        <option>Webcam</option>
+                        <option>External Camera</option>
+                    </select>
+                </div>
+        
+                <!-- Enhancements -->
+                <div class="space-y-2">
+                    <label class="text-sm opacity-80 text-[12px]">Enhancements</label>
+                    <div class="flex gap-3 flex-wrap">
+        
+                        <button class="flex items-center gap-2 px-4 py-2 rounded-lg text-[12px]
+                         bg-[#2A2D32]  cursor-pointer hover:bg-[#34373D] transition">
+                            <span>
+                                <img src="video-02.svg" alt="">
+                            </span> Background Blur
+                        </button>
+        
+                        <button class="flex items-center gap-2 px-4 py-2 rounded-lg text-[12px]
+                         bg-[#2A2D32] hover:bg-[#34373D] cursor-pointer transition">
+                            <img src="mic-02.svg" alt=""> Noise Cancellation
+                        </button>
+        
+                    </div>
+                </div>
+        
+            </div>
+        
+            <!-- Info -->
+            <div class="bg-[#ECF6FC] text-sm rounded-md border border-[#3FA1E3] p-2 gap-2.5 text-[#1A445F] flex items-center">
+                <span>
+                    <img src="information-circle.svg" alt="alt text">
+                </span>
+                <p>Please use the built-in noise cancellation on Mac and iOS devices.</p>
+            </div>
+        
+        </div>
+    </div>
+    <!-- right section -->
+    <div class="flex flex-col justify-between ">
+        <div class="flex flex-col gap-3 ">
+            <h1 class="font-semibold text-lg">Quick Check</h1>
+            <div class="flex flex-col gap-2">
+                @for(item of checkListItems; track $index){
+                    <section class="flex gap-2">
+                        <div>
+                            <img src="{{item.path}}" alt="">
+                        </div>
+                        <div class="flex flex-col">
+                            <h1 class="text-[16px]">{{item.title}}</h1>
+                            <p class="opacity-90 text-[12px]">{{item.description}}</p>
+                        </div>
+                    </section>
+                }
+            </div>
+        </div>
+        <div class="flex justify-between">
+            <div class="flex items-center gap-1">
+                <input type="checkbox" (click)="handleIsAgreed()" name="agree" id="">
+                <p>I acknowledge that my setup has been tested properly.</p>
+            </div>
+            <div>
+                <button [disabled]="!isAgreed" (click)="handleClick()"
+                    class="cursor-pointer py-2.5 px-5 bg-[#F0EBFF] rounded-md text-[#6834FF] w-full sm:w-auto text-center font-medium">
+                    Next &gt;
+                </button>
+            </div>
+        </div>
+    </div>
+
+</div>

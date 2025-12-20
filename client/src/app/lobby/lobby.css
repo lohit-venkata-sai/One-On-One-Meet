@@ -1,0 +1,9 @@
+button:enabled {
+    opacity: 1;
+    cursor: pointer;
+}
+
+button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}

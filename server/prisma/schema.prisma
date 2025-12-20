@@ -1,0 +1,52 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Candidate{
+  id String @id @default(uuid())
+  name String
+  experience Experience @default(EXP_0_2)
+  sessions Session[]
+  createdAt DateTime @default(now())
+}
+model Expert{
+  id String @id @default(uuid())
+  topics String[]
+  sessions Session[]
+  createdAt DateTime @default(now())
+}
+model Session{
+  id String @id @default(uuid())
+  topic String
+  startDate DateTime
+  endDate DateTime
+
+  candidateId String
+  expertId String
+  status Status  @default(scheduled)
+
+  candidate Candidate @relation(fields:[candidateId] ,references:[id])
+  expert Expert @relation(fields:[expertId], references:[id])
+  createdAt DateTime @default(now())
+}
+enum Status{
+  scheduled 
+  ongoing
+  completed
+}
+enum Experience{
+  EXP_0_2
+  EXP_2_6
+  EXP_6_15
+}
