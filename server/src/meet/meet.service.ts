@@ -42,6 +42,7 @@ export class MeetService {
     return {
       token: token.toJwt(),
       meetId,
+      success: true,
     };
   }
   leaveMeet(meetId: String) {
@@ -55,5 +56,13 @@ export class MeetService {
       this.rooms.set(meetId, count - 1);
     }
     return { status: 200, success: true };
+  }
+  isValidMeetId(meetId: String) {
+    console.log(meetId);
+    if (this.rooms.has(meetId)) {
+      return { status: 200, success: true };
+    } else {
+      return { status: 404, success: false };
+    }
   }
 }

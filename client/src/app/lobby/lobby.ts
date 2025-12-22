@@ -90,11 +90,12 @@ export class Lobby {
         video: true,
       });
       streamCam.getTracks().forEach((track) => track.stop());
-      this.showPopUp = false;
+      // this.showPopUp = false;
       console.log(this.showPopUp);
       document.body.style.overflow = '';
     } catch (error) {
-      this.showPopUp = true;
+      // this.showPopUp = true;
+      console.log(error);
     }
   }
 }

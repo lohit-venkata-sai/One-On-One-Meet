@@ -8,7 +8,7 @@ import {
   RemoteParticipant,
   LocalTrackPublication,
   LocalTrack,
-  RemoteTrack,
+  createLocalVideoTrack,
 } from 'twilio-video';
 import { Header } from '../header/header';
 
@@ -23,9 +23,9 @@ import { Header } from '../header/header';
 })
 export class Meeting implements OnInit, OnDestroy {
   room!: Room;
-
+  isCamOn: boolean = true;
+  isMicOn: boolean = true;
   constructor(private state: StateService, private router: Router) {}
-
   async ngOnInit() {
     const token = this.state.token();
     const meetId = this.state.meetId();
@@ -79,31 +79,101 @@ export class Meeting implements OnInit, OnDestroy {
     const container = document.getElementById('remote-video');
     if (!container) return;
 
+    const attachTrack = (track: any) => {
+      if (track.kind !== 'video') return;
+
+      const el = track.attach();
+      el.setAttribute('data-track-sid', track.sid);
+
+      el.style.width = '100%';
+      el.style.height = '100%';
+      el.style.objectFit = 'cover';
+
+      container.appendChild(el);
+    };
+
     participant.tracks.forEach((publication) => {
       if (publication.isSubscribed && publication.track) {
-        if (publication.track.kind === 'video' || publication.track.kind === 'audio') {
-          container.appendChild(publication.track.attach());
-        }
+        attachTrack(publication.track);
       }
     });
 
-    participant.on('trackSubscribed', (track) => {
-      if (track.kind === 'video' || track.kind === 'audio') {
-        container.appendChild(track.attach());
+    participant.on('trackSubscribed', attachTrack);
+    participant.on('trackDisabled', (track) => {
+      if (track.kind !== 'video') return;
+
+      const el = document.querySelector(
+        `[data-track-sid="${(track as any).sid}"]`
+      ) as HTMLElement | null;
+
+      if (el) {
+        el.style.display = 'none';
+      }
+    });
+
+    participant.on('trackEnabled', (track) => {
+      if (track.kind !== 'video') return;
+
+      const el = document.querySelector(
+        `[data-track-sid="${(track as any).sid}"]`
+      ) as HTMLElement | null;
+
+      if (el) {
+        el.style.display = 'block';
       }
     });
 
     participant.on('trackUnsubscribed', (track) => {
-      if (track.kind === 'video' || track.kind === 'audio') {
-        track.detach().forEach((el) => el.remove());
-      }
+      const el = document.querySelector(`[data-track-sid="${track.sid}"]`);
+      el?.remove(); // blank screen
     });
   }
 
+  muteMic() {
+    this.room.localParticipant.audioTracks.forEach((publication) => publication.track?.disable());
+  }
+  unMuteMic() {
+    this.room.localParticipant.audioTracks.forEach((publication) => publication.track?.enable());
+  }
+  async camOn() {
+    const container = document.getElementById('local-video');
+    if (!container) return;
+
+    container.replaceChildren();
+
+    const track = await createLocalVideoTrack();
+
+    await this.room.localParticipant.publishTrack(track);
+
+    container.appendChild(track.attach());
+  }
+  camOff() {
+    this.room.localParticipant.videoTracks.forEach((pub) => {
+      pub.track?.stop();
+      pub.unpublish();
+    });
+  }
+  toggleCam() {
+    this.isCamOn ? this.camOff() : this.camOn();
+    this.isCamOn = !this.isCamOn;
+  }
+  toggleMic() {
+    this.isMicOn ? this.muteMic() : this.unMuteMic();
+    this.isMicOn = !this.isMicOn;
+  }
   leaveMeeting() {
-    if (this.room) {
-      this.room.disconnect();
-    }
+    if (!this.room) return;
+    this.room.localParticipant.audioTracks.forEach((pub) => {
+      pub.track.stop();
+      pub.track.detach().forEach((el) => el.remove());
+    });
+
+    this.room.localParticipant.videoTracks.forEach((pub) => {
+      pub.track.stop();
+      pub.track.detach().forEach((el) => el.remove());
+    });
+
+    this.room.disconnect();
     this.router.navigateByUrl('/lobby');
   }
 }

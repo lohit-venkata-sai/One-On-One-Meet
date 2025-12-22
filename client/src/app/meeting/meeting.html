@@ -2,8 +2,9 @@
 <div class="grid grid-cols-12 gap-5 flex-1 p-5">
 
     <div class="col-span-8 relative flex justify-center border rounded-md border-white/20 items-center bg-gray-800">
-        <div id="remote-video" class='flex-1'></div>
-        <div id="local-video" class="absolute h-48 w-61.5 border rounded-md bottom-1 right-1"></div>
+        <div id="remote-video" class='flex-1 object-cover aspect-video'></div>
+        <div id="local-video" class="absolute object-cover h-48 w-61.5 aspect-video border rounded-md bottom-1 right-1">
+        </div>
     </div>
 
     <div class="col-span-4 flex flex-col gap-5">
@@ -45,11 +46,11 @@
     <div class="flex flex-row gap-4">
         <section class="relative">
             <img src="Frame 1000007594.svg" alt="">
-            <img src="Mic.svg" class="absolute top-0 left-0" alt="">
+            <img src="Mic.svg" (click)="toggleMic()" class="absolute cursor-pointer top-0 left-0" alt="">
         </section>
         <section class="relative">
             <img src="Frame 1000007594.svg" alt="">
-            <img src="Camera.svg" class="absolute top-0 left-0" alt="">
+            <img src="Camera.svg" (click)="toggleCam()" class="absolute cursor-pointer top-0 left-0" alt="">
         </section>
         <section>
             <img src="Share screen.svg" alt="">
@@ -58,7 +59,7 @@
             <img src="Mic (1).svg" alt="">
         </section>
         <section>
-            <img src="Icon button (2).svg" alt="">
+            <img (click)="leaveMeeting()" src="Icon button (2).svg" alt="" class="cursor-pointer">
         </section>
     </div>
     <div>

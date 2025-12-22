@@ -1,4 +1,4 @@
-import { Body, Controller, Post } from '@nestjs/common';
+import { Body, Controller, Get, Post, Param } from '@nestjs/common';
 import { MeetService } from './meet.service';
 
 @Controller('meet')
@@ -18,5 +18,9 @@ export class MeetController {
   @Post('leave')
   leaveMeet(@Body() body: { meetId: String }) {
     return this.meetService.leaveMeet(body.meetId);
+  }
+  @Get('isvalid/:meetId')
+  isValidMeetId(@Param('meetId') meetId: string) {
+    return this.meetService.isValidMeetId(meetId);
   }
 }
