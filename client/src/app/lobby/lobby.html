@@ -1,4 +1,4 @@
-<div class="bg-[#1E2024] p-4 sm:p-6 gap-6 rounded-md flex flex-col max-w-5xl mx-auto">
+<div class="bg-[#1E2024] p-4 sm:p-6 gap-6 rounded-md flex flex-col w-full mx-auto">
     <div>
         <p class="text-sm sm:text-base">
             Hey {{name}}, Welcome to Your {{title}}
@@ -61,14 +61,64 @@
         <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
             <div class="flex gap-2 items-start sm:items-center">
                 <input id="checkbox" (click)="handleIsAgreed()" name="checkbox" type="checkbox" class="mt-1 sm:mt-0">
-                <label for="checkbox"  class="text-sm sm:text-base">
+                <label for="checkbox" class="text-sm sm:text-base">
                     I have read and understood all instructions
                 </label>
             </div>
 
-            <button [disabled]="!isAgreed" (click)="handleClick()" class=" cursor-pointer py-2.5 px-5 bg-[#F0EBFF] rounded-md text-[#6834FF] w-full sm:w-auto text-center font-medium">
+            <button [disabled]="!isAgreed" (click)="onNextBtnClick()"
+                class=" cursor-pointer py-2.5 px-5 bg-[#F0EBFF] rounded-md text-[#6834FF] w-full sm:w-auto text-center font-medium">
                 Next &gt;
             </button>
         </div>
     </div>
+    <!-- @if(showPopUp){ -->
+    <div *ngIf="showPopUp"
+        class="absolute shadow-sm z-99 bg-black/0 backdrop-blur-[10px] h-screen w-screen overflow-hidden top-0 right-0  flex justify-center items-center">
+        <div class="bg-[#1E2024] border-4 border-black/20 rounded-md flex flex-col p-6 gap-2">
+            <div class=" flex flex-col gap-3 ">
+                <h1 class="font-600 text-[25px]">Camera & Microphone Access Required</h1>
+                <p class="text-4 font-400 text-[#AFAFAF]">
+                    To join the interview, you need to grant access to your camera and microphone.
+                </p>
+            </div>
+            <div class="flex flex-col gap-6">
+                <div class="flex flex-col gap-2 rounded-md p-4 bg-[#272b30]">
+                    <div class="flex justify-between items-center">
+                        <h4 class="text-[18px] font-semibold">Permission Denied</h4>
+                        <span class="text-[#BAA2FF] text-[14px] cursor-pointer underline ">Learn how to enable?</span>
+                    </div>
+                    <div class="text-[#AFAFAF] text-[16px] flex flex-col gap-1">
+                        <div class="flex items-center gap-2">
+                            <img src="Icon button.svg" alt="">
+                            <span>Camera access is blocked.</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <img src="Icon button (1).svg" alt="">
+                            <span>Microphone access is blocked.</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="rounded-md flex flex-col gap-2 bg-[#272b30] p-2">
+                    <h4 class="text-[18px] font-semibold">How to Allow Permissions</h4>
+                    <div class="flex flex-col gap-2">
+                        <div class="flex gap-3">
+                            <span class="px-3 py-1 bg-[#1E2024] rounded-full text-[#AFAFAF]">1</span>
+                            <span>Look for a camera or lock icon in your browser's address bar</span>
+                        </div>
+                        <div class="flex gap-3">
+                            <span class="px-3 py-1 bg-[#1E2024] rounded-full text-[#AFAFAF]">2</span>
+                            <span>Look for a camera or lock icon in your browser's address bar</span>
+                        </div>
+                        <div class="flex gap-3">
+                            <span class="px-3 py-1 bg-[#1E2024] rounded-full text-[#AFAFAF]">3</span>
+                            <span>Look for a camera or lock icon in your browser's address bar</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+    <!-- } -->
 </div>

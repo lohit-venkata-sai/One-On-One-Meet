@@ -1,6 +1,8 @@
 import { Component, inject } from '@angular/core';
 import { Router, RouterModule } from '@angular/router';
-
+import { StateService } from '../services/state.service';
+import { MeetService } from '../services/meet.service';
+import { faker } from '@faker-js/faker';
 @Component({
   selector: 'app-precheck',
   imports: [RouterModule],
@@ -8,6 +10,7 @@ import { Router, RouterModule } from '@angular/router';
   styleUrl: './precheck.css',
 })
 export class Precheck {
+  constructor(private stateService: StateService, private meetService: MeetService) {}
   router = inject(Router);
   isAgreed: boolean = false;
   checkListItems: CheckListItems[] = [
@@ -31,7 +34,35 @@ export class Precheck {
     this.isAgreed = !this.isAgreed;
   }
   handleClick() {
-    this.router.navigateByUrl('/meeting');
+    const meetId = this.stateService.meetId();
+
+    if (!meetId) {
+      this.router.navigateByUrl('/lobby');
+      return;
+    }
+
+    const identity = faker.person.fullName();
+    console.log('this is identity', identity);
+    this.meetService.joinMeet(meetId, identity).subscribe({
+      next: (res) => {
+        console.log(res.success, res.token);
+        if (res.success && res.token) {
+          this.stateService.setToken(res.token);
+          this.router.navigateByUrl('/meeting');
+        } else {
+          console.error('Failed to join meeting');
+        }
+      },
+      error: (err) => {
+        console.error('Join meeting error', err);
+      },
+    });
+  }
+  ngOnInit() {
+    console.log(this.stateService.meetId());
+  }
+  ngOnDestroy() {
+    console.log(this.stateService.token());
   }
 }
 

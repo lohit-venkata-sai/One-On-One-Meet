@@ -1,13 +1,11 @@
 import { Component, signal } from '@angular/core';
-import { RouterOutlet } from '@angular/router';
-import { Header } from './header/header';
-
+import { NavigationEnd, Router, RouterOutlet } from '@angular/router';
 @Component({
   selector: 'app-root',
-  imports: [ RouterOutlet,Header],
-  templateUrl: './app.html',
-  styleUrl: './app.css'
+  imports: [RouterOutlet],
+  template: `<router-outlet />`,
+  styleUrl: './app.css',
 })
 export class App {
-  protected readonly title = signal('onetoone');
+  constructor(private router: Router) {}
 }
