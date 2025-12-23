@@ -5,6 +5,8 @@ import { ConfigModule } from '@nestjs/config';
 import { MeetController } from './meet/meet.controller';
 import { MeetService } from './meet/meet.service';
 import { MeetModule } from './meet/meet.module';
+import { SocketModule } from './socket/socket.module';
+import { ChatGateway } from './chat/chat.gateway';
 
 @Module({
   imports: [
@@ -12,8 +14,9 @@ import { MeetModule } from './meet/meet.module';
       isGlobal: true,
     }),
     MeetModule,
+    SocketModule,
   ],
   controllers: [AppController, MeetController],
-  providers: [AppService, MeetService],
+  providers: [AppService, MeetService, ChatGateway],
 })
 export class AppModule {}

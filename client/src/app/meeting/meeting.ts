@@ -9,8 +9,13 @@ import {
   LocalTrackPublication,
   LocalTrack,
   createLocalVideoTrack,
+  RemoteTrack,
+  RemoteVideoTrack,
+  RemoteAudioTrack,
+  RemoteDataTrack,
 } from 'twilio-video';
 import { Header } from '../header/header';
+import { SocketService } from '../services/socket.service';
 
 @Component({
   selector: 'app-meeting',
@@ -25,7 +30,12 @@ export class Meeting implements OnInit, OnDestroy {
   room!: Room;
   isCamOn: boolean = true;
   isMicOn: boolean = true;
-  constructor(private state: StateService, private router: Router) {}
+  msgText = '';
+  constructor(
+    private state: StateService,
+    private router: Router,
+    private socketService: SocketService
+  ) {}
   async ngOnInit() {
     const token = this.state.token();
     const meetId = this.state.meetId();
@@ -83,7 +93,7 @@ export class Meeting implements OnInit, OnDestroy {
       if (track.kind !== 'video') return;
 
       const el = track.attach();
-      el.setAttribute('data-track-sid', track.sid);
+      el.setAttribute('data_track_sid', track.sid);
 
       el.style.width = '100%';
       el.style.height = '100%';
@@ -103,7 +113,7 @@ export class Meeting implements OnInit, OnDestroy {
       if (track.kind !== 'video') return;
 
       const el = document.querySelector(
-        `[data-track-sid="${(track as any).sid}"]`
+        `[data_track_sid="${(track as any).sid}"]`
       ) as HTMLElement | null;
 
       if (el) {
@@ -115,7 +125,7 @@ export class Meeting implements OnInit, OnDestroy {
       if (track.kind !== 'video') return;
 
       const el = document.querySelector(
-        `[data-track-sid="${(track as any).sid}"]`
+        `[data_track_sid="${(track as any).sid}"]`
       ) as HTMLElement | null;
 
       if (el) {
@@ -123,9 +133,8 @@ export class Meeting implements OnInit, OnDestroy {
       }
     });
 
-    participant.on('trackUnsubscribed', (track) => {
-      const el = document.querySelector(`[data-track-sid="${track.sid}"]`);
-      el?.remove(); // blank screen
+    participant.on('trackUnsubscribed', (track: RemoteVideoTrack | RemoteAudioTrack) => {
+      track.detach().forEach((el) => el.remove());
     });
   }
 
@@ -160,6 +169,22 @@ export class Meeting implements OnInit, OnDestroy {
   toggleMic() {
     this.isMicOn ? this.muteMic() : this.unMuteMic();
     this.isMicOn = !this.isMicOn;
+  }
+
+  sendMsg() {
+    console.log(this.msgText);
+    if (this.msgText == '') return;
+
+    this.socketService.socket.emit('new:message', {
+      socketId: this.socketService.socket.id,
+      message: this.msgText,
+      room: this.state.meetId(),
+    });
+    this.state.addChatMsg({
+      socketId: this.socketService.socket.id,
+      message: this.msgText,
+      room: this.state.meetId(),
+    });
   }
   leaveMeeting() {
     if (!this.room) return;

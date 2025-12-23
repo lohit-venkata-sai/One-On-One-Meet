@@ -5,7 +5,8 @@ import { FormsModule } from '@angular/forms';
 import { MeetService } from '../services/meet.service';
 import { StateService } from '../services/state.service';
 import { faker } from '@faker-js/faker';
-
+import { connect } from 'twilio-video';
+import { firstValueFrom } from 'rxjs';
 @Component({
   selector: 'app-precheck',
   imports: [CommonModule, FormsModule],
@@ -238,16 +239,41 @@ export class Precheck implements OnInit {
 
   async checkNetworkSpeed(): Promise<boolean> {
     try {
-      const startTime = Date.now();
-      await fetch(
-        'https://www.google.com/images/branding/googlelogo/1x/googlelogo_light_color_272x92dp.png?t=' +
-          Date.now(),
-        { mode: 'no-cors' }
-      );
-      const duration = Date.now() - startTime;
-      return duration < 1500;
-    } catch (e) {
-      console.error('Network check failed:', e);
+      const identity = faker.person.firstName();
+
+      // 1️⃣ Create meet
+      const createRes = await firstValueFrom(this.meetService.createMeet());
+      const meetId = createRes.meetId;
+
+      // 2️⃣ Join meet → get token
+      const joinRes = await firstValueFrom(this.meetService.joinMeet(meetId, identity));
+
+      if (!joinRes.success || !joinRes.token) {
+        return false;
+      }
+
+      const token = joinRes.token;
+
+      // 3️⃣ Connect to Twilio (audio-only)
+      const room = await connect(token, {
+        name: 'network-test-room',
+        audio: true,
+        video: false,
+        networkQuality: { local: 1 },
+      });
+
+      // 4️⃣ Wait for network quality result
+      return await new Promise<boolean>((resolve) => {
+        room.localParticipant.once('networkQualityLevelChanged', (level: number) => {
+          console.log('Network Quality Level:', level);
+
+          room.disconnect();
+
+          resolve(level >= 3); // ✅ threshold
+        });
+      });
+    } catch (err) {
+      console.error('Network test failed:', err);
       return false;
     }
   }

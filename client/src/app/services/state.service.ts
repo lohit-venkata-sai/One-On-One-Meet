@@ -1,15 +1,19 @@
 import { Injectable, signal } from '@angular/core';
+import { ChatMsg } from './socket.service';
 
 @Injectable({
   providedIn: 'root',
 })
 export class StateService {
+  constructor() {}
   meetId = signal<string | null>(null);
   token = signal<string | null>(null);
 
   speakerId?: string | null;
   micId?: string | null;
   cameraId?: string | null;
+
+  chatMessages: ChatMsg[] = [];
 
   setMeetId(meetId: string) {
     this.meetId.set(meetId);
@@ -29,5 +33,8 @@ export class StateService {
       micId: this.micId,
       cameraId: this.cameraId,
     };
+  }
+  addChatMsg(message: ChatMsg) {
+    this.chatMessages.push(message);
   }
 }

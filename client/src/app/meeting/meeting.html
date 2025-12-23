@@ -26,8 +26,9 @@
                 <span class=" py-2 px-4 bg-[#272B30] rounded-md">Let’s start</span>
             </div>
             <div class="mt-auto grid grid-cols-8 gap-2.5 items-center">
-                <input type="text" placeholder="Type here" class="bg-[#272B30] col-span-7 py-1 px-2.5 rounded-md">
-                <button
+                <input type="text" [(value)]='msgText' placeholder="Type here"
+                    class="bg-[#272B30] col-span-7 py-1 px-2.5 rounded-md">
+                <button (click)="sendMsg()"
                     class="bg-[#272B30] p-2.5  col-span-1 text-[#8993A2] rounded-md gap-1 flex justify-center items-center">
                     <img src="Vector.svg" alt="">
                 </button>
