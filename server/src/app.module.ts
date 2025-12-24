@@ -6,7 +6,7 @@ import { MeetController } from './meet/meet.controller';
 import { MeetService } from './meet/meet.service';
 import { MeetModule } from './meet/meet.module';
 import { SocketModule } from './socket/socket.module';
-import { ChatGateway } from './chat/chat.gateway';
+import { SocketService } from './socket/socket.service';
 
 @Module({
   imports: [
@@ -17,6 +17,6 @@ import { ChatGateway } from './chat/chat.gateway';
     SocketModule,
   ],
   controllers: [AppController, MeetController],
-  providers: [AppService, MeetService, ChatGateway],
+  providers: [AppService, MeetService],
 })
 export class AppModule {}
