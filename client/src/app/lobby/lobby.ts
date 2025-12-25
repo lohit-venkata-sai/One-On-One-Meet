@@ -3,6 +3,7 @@ import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { MeetService } from '../services/meet.service';
 import { StateService } from '../services/state.service';
 import { CommonModule } from '@angular/common';
+import { SocketService } from '../services/socket.service';
 
 @Component({
   selector: 'app-lobby',
@@ -14,7 +15,8 @@ export class Lobby {
   constructor(
     private meetService: MeetService,
     private stateService: StateService,
-    private route: ActivatedRoute
+    private route: ActivatedRoute,
+    private socketService: SocketService
   ) {}
   router = inject(Router);
   name = 'Aravid';
@@ -29,6 +31,7 @@ export class Lobby {
 
   onNextBtnClick() {
     const meetId = this.route.snapshot.paramMap.get('meetId');
+
     if (meetId) {
       this.NavigateUserToNextPage(meetId);
     } else {
@@ -40,15 +43,17 @@ export class Lobby {
     this.meetService.isMeetIdvalid(meetId).subscribe({
       next: (res) => {
         if (res.success) {
-          console.log(meetId);
           this.stateService.setMeetId(meetId);
+          console.log('can u see me', meetId);
+          this.socketService.socket.emit('join:room', meetId);
           this.router.navigateByUrl('/precheck');
         } else {
           this.error = '404 — Meeting not found';
           this.router.navigateByUrl('/*');
         }
         this.loading = false;
-        // console.log(this.stateService.meetId);
+
+        console.log(this.stateService.meetId);
       },
       error: () => {
         this.error = '404 — Meeting not found';
@@ -62,6 +67,8 @@ export class Lobby {
     this.meetService.createMeet().subscribe({
       next: (res) => {
         this.stateService.setMeetId(res.meetId);
+        console.log('can u see me', res.meetId);
+        this.socketService.socket.emit('join:room', res.meetId);
         this.router.navigateByUrl('/precheck');
       },
       error: () => {

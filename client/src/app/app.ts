@@ -8,7 +8,5 @@ import { SocketService } from './services/socket.service';
   styleUrl: './app.css',
 })
 export class App {
-  constructor(private router: Router, private socketService: SocketService) {
-    this.socketService.connect();
-  }
+  constructor(private router: Router, private socketService: SocketService) {}
 }

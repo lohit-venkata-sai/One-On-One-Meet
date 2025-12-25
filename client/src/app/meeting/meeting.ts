@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, Signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { StateService } from '../services/state.service';
 
@@ -9,19 +9,18 @@ import {
   LocalTrackPublication,
   LocalTrack,
   createLocalVideoTrack,
-  RemoteTrack,
   RemoteVideoTrack,
   RemoteAudioTrack,
-  RemoteDataTrack,
 } from 'twilio-video';
 import { Header } from '../header/header';
-import { SocketService } from '../services/socket.service';
+import { ChatMsg, SocketService } from '../services/socket.service';
+import { FormsModule } from '@angular/forms';
 
 @Component({
   selector: 'app-meeting',
   templateUrl: './meeting.html',
   styleUrl: './meeting.css',
-  imports: [Header],
+  imports: [Header, FormsModule],
   host: {
     class: 'block flex flex-col flex-1 bg-black',
   },
@@ -31,11 +30,18 @@ export class Meeting implements OnInit, OnDestroy {
   isCamOn: boolean = true;
   isMicOn: boolean = true;
   msgText = '';
+  socketId: string | undefined = '';
+  chatMessages: Signal<ChatMsg[]>;
+
   constructor(
     private state: StateService,
     private router: Router,
     private socketService: SocketService
-  ) {}
+  ) {
+    this.chatMessages = this.state.chatMessages;
+    this.socketId = this.socketService.socket.id;
+  }
+
   async ngOnInit() {
     const token = this.state.token();
     const meetId = this.state.meetId();

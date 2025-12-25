@@ -241,11 +241,11 @@ export class Precheck implements OnInit {
     try {
       const identity = faker.person.firstName();
 
-      //Create meet
+      // 1️⃣ Create meet
       const createRes = await firstValueFrom(this.meetService.createMeet());
       const meetId = createRes.meetId;
 
-      //Join meet and get token
+      // 2️⃣ Join meet → get token
       const joinRes = await firstValueFrom(this.meetService.joinMeet(meetId, identity));
 
       if (!joinRes.success || !joinRes.token) {
@@ -254,7 +254,7 @@ export class Precheck implements OnInit {
 
       const token = joinRes.token;
 
-      //Connect to Twilio 
+      // 3️⃣ Connect to Twilio (audio-only)
       const room = await connect(token, {
         name: 'network-test-room',
         audio: true,
@@ -262,14 +262,14 @@ export class Precheck implements OnInit {
         networkQuality: { local: 1 },
       });
 
-      //Wait for network quality result
+      // 4️⃣ Wait for network quality result
       return await new Promise<boolean>((resolve) => {
         room.localParticipant.once('networkQualityLevelChanged', (level: number) => {
           console.log('Network Quality Level:', level);
 
           room.disconnect();
 
-          resolve(level >= 3); 
+          resolve(level >= 3); // ✅ threshold
         });
       });
     } catch (err) {

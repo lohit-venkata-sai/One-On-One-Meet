@@ -1,78 +1,88 @@
-<!-- main content -->
-<div class="grid grid-cols-12 gap-5 flex-1 p-5">
+<div class="text-white flex flex-col">
+    <!-- main content -->
+    <div class="h-screen grid grid-cols-12 gap-5 flex-1 p-4 overflow-hidden min-h-0">
 
-    <div class="col-span-8 relative flex justify-center border rounded-md border-white/20 items-center bg-gray-800">
-        <div id="remote-video" class='flex-1 object-cover aspect-video'></div>
-        <div id="local-video" class="absolute object-cover h-48 w-61.5 aspect-video border rounded-md bottom-1 right-1">
+        <div
+            class="col-span-8  relative flex justify-center border rounded-md border-white/20 items-center bg-gray-800">
+            <div id="remote-video" class='flex-1 object-cover aspect-video'></div>
+            <div id="local-video"
+                class="absolute object-cover h-46 w-61.5 aspect-video border rounded-md bottom-1 right-1">
+            </div>
         </div>
+
+        <div class="col-span-4 flex flex-col gap-4 min-h-0">
+            <header>
+                <app-header />
+            </header>
+
+            <main class="flex-1 flex flex-col bg-[#1E2024] rounded-md p-2 gap-2 min-h-0 overflow-hidden">
+                <div class="py-2 px-4 bg-[#272B30]">Chat</div>
+
+                <div class="flex flex-col gap-2 overflow-y-auto h-69 p-2
+                    [&::-webkit-scrollbar]:w-2
+                    [&::-webkit-scrollbar-track]:bg-[#1E2024]
+                    [&::-webkit-scrollbar-thumb]:bg-[#3a3f47]
+                    [&::-webkit-scrollbar-thumb]:rounded-lg
+                    [&::-webkit-scrollbar-thumb:hover]:bg-[#4b515b]
+                    scrollbar-thin">
+                    @for (msg of chatMessages(); track $index) {
+                    <div class="flex gap-2.5" [class.justify-end]="socketId === msg.socketId"
+                        [class.justify-start]="socketId !== msg.socketId">
+                        <span class="py-2 px-4 rounded-md max-w-[70%] text-wrap wrap-break-word"
+                            [class.bg-[#272B30]]="true">
+                            {{ msg.message }}
+                        </span>
+                    </div>
+                    }
+                </div>
+                <div class="mt-auto grid grid-cols-8 gap-2.5 items-center">
+                    <input type="text" [(ngModel)]='msgText' placeholder="Type here"
+                        class="bg-[#272B30] col-span-7 py-1 px-2.5 rounded-md">
+                    <button (click)="sendMsg()"
+                        class="bg-[#272B30] p-2.5  col-span-1 text-[#8993A2] rounded-md gap-1 flex justify-center items-center">
+                        <img src="Vector.svg" alt="">
+                    </button>
+                </div>
+
+            </main>
+        </div>
+
     </div>
 
-    <div class="col-span-4 flex flex-col gap-5">
-        <header>
-            <app-header />
-        </header>
-
-        <main class="flex-1 flex flex-col bg-[#1E2024] rounded-md p-2 gap-2">
-            <div class="py-2 px-4 bg-[#272B30]">Chat</div>
-            <div class="flex gap-2.5 justify-start">
-                <span class="py-2 px-4 bg-[#272B30]  rounded-md">Hello</span>
-            </div>
-            <div class="flex gap-2.5  justify-end">
-                <span class=" py-2 px-4 bg-[#272B30] rounded-md">Hello, I’m Gajala from
-                    Washington
-                    DC</span>
-            </div>
-            <div class="flex gap-2.5 justify-start">
-                <span class=" py-2 px-4 bg-[#272B30] rounded-md">Let’s start</span>
-            </div>
-            <div class="mt-auto grid grid-cols-8 gap-2.5 items-center">
-                <input type="text" [(value)]='msgText' placeholder="Type here"
-                    class="bg-[#272B30] col-span-7 py-1 px-2.5 rounded-md">
-                <button (click)="sendMsg()"
-                    class="bg-[#272B30] p-2.5  col-span-1 text-[#8993A2] rounded-md gap-1 flex justify-center items-center">
-                    <img src="Vector.svg" alt="">
-                </button>
-            </div>
-        </main>
-    </div>
-
-</div>
-
-<!-- control bar -->
-<div class="px-5 py-3 bg-[#1E2024] flex justify-between items-center">
-    <div>
+    <!-- control bar -->
+    <div class="px-5 py-1 bg-[#1E2024] flex justify-between items-center ">
         Time left: 00:00
-    </div>
-    <!-- controls -->
-    <div class="flex flex-row gap-4">
-        <section class="relative">
-            <img src="Frame 1000007594.svg" alt="">
-            <img src="Mic.svg" (click)="toggleMic()" class="absolute cursor-pointer top-0 left-0" alt="">
-        </section>
-        <section class="relative">
-            <img src="Frame 1000007594.svg" alt="">
-            <img src="Camera.svg" (click)="toggleCam()" class="absolute cursor-pointer top-0 left-0" alt="">
-        </section>
-        <section>
-            <img src="Share screen.svg" alt="">
-        </section>
-        <section>
-            <img src="Mic (1).svg" alt="">
-        </section>
-        <section>
-            <img (click)="leaveMeeting()" src="Icon button (2).svg" alt="" class="cursor-pointer">
-        </section>
-    </div>
-    <div>
-        <div class="flex gap-2 text-[14px] text-[#E7DFFF] font-400">
-            <span class="flex p-3 gap-0.5 rounded-md border justify-center items-center ">
-                <h6>Code</h6>
-                <img src="Frame.svg" alt="" width="20px">
-            </span>
-            <span class="flex p-3 gap-0.5 rounded-md border justify-center items-center ">
-                <h6>White board</h6>
-                <img src="Frame (1).svg" alt="">
-            </span>
+        <!-- controls -->
+        <div class="flex flex-row gap-4">
+            <section class="relative">
+                <img src="Frame 1000007594.svg" alt="">
+                <img src="Mic.svg" (click)="toggleMic()" class="absolute cursor-pointer top-0 left-0" alt="">
+            </section>
+            <section class="relative">
+                <img src="Frame 1000007594.svg" alt="">
+                <img src="Camera.svg" (click)="toggleCam()" class="absolute cursor-pointer top-0 left-0" alt="">
+            </section>
+            <section>
+                <img src="Share screen.svg" alt="">
+            </section>
+            <section>
+                <img src="Mic (1).svg" alt="">
+            </section>
+            <section>
+                <img (click)="leaveMeeting()" src="Icon button (2).svg" alt="" class="cursor-pointer">
+            </section>
+        </div>
+        <div>
+            <div class="flex gap-2 text-[14px] text-[#E7DFFF] font-400">
+                <span class="flex p-3 gap-0.5 rounded-md border justify-center items-center ">
+                    <h6>Code</h6>
+                    <img src="Frame.svg" alt="" width="20px">
+                </span>
+                <span class="flex p-3 gap-0.5 rounded-md border justify-center items-center ">
+                    <h6>White board</h6>
+                    <img src="Frame (1).svg" alt="">
+                </span>
+            </div>
         </div>
     </div>
 </div>

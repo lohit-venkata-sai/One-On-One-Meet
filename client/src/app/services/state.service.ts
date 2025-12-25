@@ -13,7 +13,7 @@ export class StateService {
   micId?: string | null;
   cameraId?: string | null;
 
-  chatMessages: ChatMsg[] = [];
+  chatMessages = signal<ChatMsg[]>([]);
 
   setMeetId(meetId: string) {
     this.meetId.set(meetId);
@@ -35,6 +35,11 @@ export class StateService {
     };
   }
   addChatMsg(message: ChatMsg) {
-    this.chatMessages.push(message);
+    console.log('message added', message);
+    this.chatMessages.update((msgs) => [...msgs, message]);
+    console.log('why this doest works', this.chatMessages());
+  }
+  clearChat() {
+    this.chatMessages.set([]);
   }
 }
