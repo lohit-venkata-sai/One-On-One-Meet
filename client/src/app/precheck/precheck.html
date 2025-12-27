@@ -17,7 +17,7 @@
 
                 @if (!stream && !errorMessage()) {
                 <div class="absolute inset-0 flex items-center justify-center bg-[#1E2024]">
-                    <div class="w-8 h-8 rounded-full border-2 border-[#6834FF] border-t-transparent animate-spin">
+                    <div class="w-8 h-8 rounded-full border-2 border-[#6834FF] animate-spin">
                     </div>
                 </div>
                 }
@@ -147,9 +147,9 @@
 
                     <div class="space-y-1.5">
                         <label class="text-xs text-gray-400 font-medium ml-1">Enhancements</label>
-                        <div class="flex gap-1.5 h-[46px]">
-                            <button (click)="blurEnabled.set(!blurEnabled())" [class.bg-[#2A2D32]]="!blurEnabled()"
-                                [class.bg-[#3D4045]]="blurEnabled()"
+                        <div class="flex gap-1.5 h-11.5">
+                            <button (click)="blur.set(!blur())" [class.bg-[#2A2D32]]="!blur()"
+                                [class.bg-[#3D4045]]="blur()"
                                 class="flex-1 flex items-center justify-center gap-2 px-3 rounded-lg text-sm font-medium transition-all border border-white/5 hover:bg-[#32363C] text-gray-300 h-full">
                                 <img src="blur.svg" alt="">
                                 Background Blur

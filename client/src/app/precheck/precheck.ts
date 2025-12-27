@@ -41,24 +41,21 @@ export class Precheck implements OnInit {
   audioInputDevices = signal<MediaDeviceInfo[]>([]);
   videoInputDevices = signal<MediaDeviceInfo[]>([]);
 
-  blurEnabled = signal(false);
+  blur = signal(false);
   noiseCancellationEnabled = signal(false);
 
-  private testTimeouts: any[] = [];
-
   ngOnInit() {
-    this.initCamera();
+    this.startCamera();
   }
 
   ngOnDestroy() {
     this.stopCamera();
-    this.clearTimeouts();
     if (this.recordedBlobUrl()) {
       URL.revokeObjectURL(this.recordedBlobUrl()!);
     }
   }
 
-  async initCamera() {
+  async startCamera() {
     try {
       this.stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
       if (this.videoElement && this.videoElement.nativeElement) {
@@ -148,8 +145,6 @@ export class Precheck implements OnInit {
   }
 
   async runChecks() {
-    this.clearTimeouts();
-
     if (
       this.stream &&
       this.stream.getVideoTracks().length > 0 &&
@@ -162,7 +157,7 @@ export class Precheck implements OnInit {
 
     this.micStatus.set('checking');
 
-    const micWorks = await this.checkAudioLevel();
+    const micWorks = await this.isAudioWorking();
     this.micStatus.set(micWorks ? 'success' : 'failure');
 
     this.networkStatus.set('checking');
@@ -181,7 +176,7 @@ export class Precheck implements OnInit {
     }
   }
 
-  checkAudioLevel(): Promise<boolean> {
+  isAudioWorking(): Promise<boolean> {
     return new Promise((resolve) => {
       if (!this.stream) {
         resolve(false);
@@ -189,47 +184,15 @@ export class Precheck implements OnInit {
       }
 
       try {
-        const audioContext = new AudioContext();
-        const analyser = audioContext.createAnalyser();
-        const microphone = audioContext.createMediaStreamSource(this.stream);
-        const scriptProcessor = audioContext.createScriptProcessor(2048, 1, 1);
-
-        analyser.smoothingTimeConstant = 0.8;
-        analyser.fftSize = 1024;
-
-        microphone.connect(analyser);
-        analyser.connect(scriptProcessor);
-        scriptProcessor.connect(audioContext.destination);
-
-        let soundDetected = false;
-        const startTime = Date.now();
-
-        scriptProcessor.onaudioprocess = () => {
-          const array = new Uint8Array(analyser.frequencyBinCount);
-          analyser.getByteFrequencyData(array);
-          let values = 0;
-          const length = array.length;
-          for (let i = 0; i < length; i++) {
-            values += array[i];
-          }
-          const average = values / length;
-
-          if (average > 10) {
-            soundDetected = true;
-          }
+        const recorder = new MediaRecorder(this.stream);
+        let chunks: BlobPart[] | undefined = [];
+        recorder.ondataavailable = (e) => chunks.push(e.data);
+        recorder.onstop = () => {
+          const blob = new Blob(chunks);
+          resolve(blob.size > 0);
         };
-
-        setTimeout(() => {
-          scriptProcessor.disconnect();
-          analyser.disconnect();
-          microphone.disconnect();
-
-          if (audioContext.state !== 'closed') {
-            audioContext.close();
-          }
-
-          resolve(soundDetected);
-        }, 3000);
+        recorder.start();
+        setTimeout(() => recorder.stop(), 2000);
       } catch (e) {
         console.error('Error checking audio:', e);
         resolve(false);
@@ -241,11 +204,9 @@ export class Precheck implements OnInit {
     try {
       const identity = faker.person.firstName();
 
-      // 1️⃣ Create meet
       const createRes = await firstValueFrom(this.meetService.createMeet());
       const meetId = createRes.meetId;
 
-      // 2️⃣ Join meet → get token
       const joinRes = await firstValueFrom(this.meetService.joinMeet(meetId, identity));
 
       if (!joinRes.success || !joinRes.token) {
@@ -254,7 +215,6 @@ export class Precheck implements OnInit {
 
       const token = joinRes.token;
 
-      // 3️⃣ Connect to Twilio (audio-only)
       const room = await connect(token, {
         name: 'network-test-room',
         audio: true,
@@ -262,18 +222,17 @@ export class Precheck implements OnInit {
         networkQuality: { local: 1 },
       });
 
-      // 4️⃣ Wait for network quality result
       return await new Promise<boolean>((resolve) => {
         room.localParticipant.once('networkQualityLevelChanged', (level: number) => {
-          console.log('Network Quality Level:', level);
+          console.log('network level', level);
 
           room.disconnect();
 
-          resolve(level >= 3); // ✅ threshold
+          resolve(level >= 3);
         });
       });
     } catch (err) {
-      console.error('Network test failed:', err);
+      console.error('network test failed:', err);
       return false;
     }
   }
@@ -316,11 +275,6 @@ export class Precheck implements OnInit {
     this.micStatus.set('pending');
     this.networkStatus.set('pending');
     this.isAcknowledged.set(false);
-  }
-
-  clearTimeouts() {
-    this.testTimeouts.forEach((t) => clearTimeout(t));
-    this.testTimeouts = [];
   }
 
   joinMeeting() {
