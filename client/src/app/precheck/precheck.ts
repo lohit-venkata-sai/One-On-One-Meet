@@ -6,7 +6,8 @@ import { MeetService } from '../services/meet.service';
 import { StateService } from '../services/state.service';
 import { faker } from '@faker-js/faker';
 import { connect } from 'twilio-video';
-import { firstValueFrom } from 'rxjs';
+import { from } from 'rxjs';
+import { error } from 'node:console';
 @Component({
   selector: 'app-precheck',
   imports: [CommonModule, FormsModule],
@@ -204,16 +205,25 @@ export class Precheck implements OnInit {
     try {
       const identity = faker.person.firstName();
 
-      const createRes = await firstValueFrom(this.meetService.createMeet());
-      const meetId = createRes.meetId;
-
-      const joinRes = await firstValueFrom(this.meetService.joinMeet(meetId, identity));
-
-      if (!joinRes.success || !joinRes.token) {
-        return false;
-      }
-
-      const token = joinRes.token;
+      let meetId: string = '';
+      this.meetService.createMeet().subscribe({
+        next: (res) => {
+          meetId = res.meetId;
+        },
+        error: (err) => {
+          console.error(err);
+        },
+      });
+      let token: string = '';
+      this.meetService.joinMeet(meetId, identity).subscribe({
+        next: (res) => {
+          if (!res.success || !res.token) {
+            throw new Error('unexpected error');
+          }
+          token = res.token;
+        },
+        error: (err) => console.error('error here', err),
+      });
 
       const room = await connect(token, {
         name: 'network-test-room',
