@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, Signal } from '@angular/core';
+import { Component, OnInit, OnDestroy, Signal, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { StateService } from '../services/state.service';
 
@@ -22,13 +22,13 @@ import { FormsModule } from '@angular/forms';
   styleUrl: './meeting.css',
   imports: [Header, FormsModule],
   host: {
-    class: 'block flex flex-col flex-1 bg-black',
+    class: 'block flex flex-col flex-1 bg-black h-screen',
   },
 })
 export class Meeting implements OnInit, OnDestroy {
   room!: Room;
-  isCamOn: boolean = true;
-  isMicOn: boolean = true;
+  isCamOn = signal(true);
+  isMicOn = signal(true);
   msgText = '';
   socketId: string | undefined = '';
   chatMessages: Signal<ChatMsg[]>;
@@ -52,6 +52,8 @@ export class Meeting implements OnInit, OnDestroy {
     }
 
     try {
+      this.camOn();
+      this.isMicOn();
       this.room = await connect(token, {
         name: meetId,
         audio: true,
@@ -96,14 +98,15 @@ export class Meeting implements OnInit, OnDestroy {
     if (!container) return;
 
     const attachTrack = (track: any) => {
-      if (track.kind !== 'video') return;
+      if (track.kind !== 'video' && track.kind !== 'audio') return;
 
       const el = track.attach();
       el.setAttribute('data_track_sid', track.sid);
-
-      el.style.width = '100%';
-      el.style.height = '100%';
-      el.style.objectFit = 'cover';
+      if (track.kind == 'video') {
+        el.style.width = '100%';
+        el.style.height = '100%';
+        el.style.objectFit = 'cover';
+      }
 
       container.appendChild(el);
     };
@@ -159,8 +162,12 @@ export class Meeting implements OnInit, OnDestroy {
     const track = await createLocalVideoTrack();
 
     await this.room.localParticipant.publishTrack(track);
-
-    container.appendChild(track.attach());
+    const ele = track.attach();
+    // ele.classList.add('local_video_ele');
+    ele.style.width = '100%';
+    ele.style.height = '100%';
+    ele.style.objectFit = 'cover';
+    container.appendChild(ele);
   }
   camOff() {
     this.room.localParticipant.videoTracks.forEach((pub) => {
@@ -169,12 +176,12 @@ export class Meeting implements OnInit, OnDestroy {
     });
   }
   toggleCam() {
-    this.isCamOn ? this.camOff() : this.camOn();
-    this.isCamOn = !this.isCamOn;
+    this.isCamOn() ? this.camOff() : this.camOn();
+    this.isCamOn.update((x) => !x);
   }
   toggleMic() {
-    this.isMicOn ? this.muteMic() : this.unMuteMic();
-    this.isMicOn = !this.isMicOn;
+    this.isMicOn() ? this.muteMic() : this.unMuteMic();
+    this.isMicOn.update((x) => !x);
   }
 
   sendMsg() {

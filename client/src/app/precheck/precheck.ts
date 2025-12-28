@@ -6,8 +6,7 @@ import { MeetService } from '../services/meet.service';
 import { StateService } from '../services/state.service';
 import { faker } from '@faker-js/faker';
 import { connect } from 'twilio-video';
-import { from } from 'rxjs';
-import { error } from 'node:console';
+import { firstValueFrom } from 'rxjs';
 @Component({
   selector: 'app-precheck',
   imports: [CommonModule, FormsModule],
@@ -205,25 +204,16 @@ export class Precheck implements OnInit {
     try {
       const identity = faker.person.firstName();
 
-      let meetId: string = '';
-      this.meetService.createMeet().subscribe({
-        next: (res) => {
-          meetId = res.meetId;
-        },
-        error: (err) => {
-          console.error(err);
-        },
-      });
-      let token: string = '';
-      this.meetService.joinMeet(meetId, identity).subscribe({
-        next: (res) => {
-          if (!res.success || !res.token) {
-            throw new Error('unexpected error');
-          }
-          token = res.token;
-        },
-        error: (err) => console.error('error here', err),
-      });
+      const meetRes = await firstValueFrom(this.meetService.createMeet());
+      const meetId = meetRes.meetId;
+
+      const joinRes = await firstValueFrom(this.meetService.joinMeet(meetId, identity));
+
+      if (!joinRes?.success || !joinRes?.token) {
+        throw new Error('unexpected error: no token returned');
+      }
+
+      const token = joinRes.token;
 
       const room = await connect(token, {
         name: 'network-test-room',
@@ -258,7 +248,7 @@ export class Precheck implements OnInit {
         .then(() => {
           this.isPlaying.set(true);
         })
-        .catch((err) => console.error('Error playing recording:', err));
+        .catch((err) => console.error('error playing recording:', err));
 
       video.onended = () => {
         this.isPlaying.set(false);
