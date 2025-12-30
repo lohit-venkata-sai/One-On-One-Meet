@@ -1,98 +1,275 @@
-import { Component, inject, signal, ViewChild, ElementRef, OnInit, OnDestroy } from '@angular/core';
-import { Router } from '@angular/router';
-import { CommonModule } from '@angular/common';
+import { Component, inject, ViewChild, ElementRef, OnInit } from '@angular/core';
+import { ChangeDetectorRef } from '@angular/core';
+import { Router, RouterModule } from '@angular/router';
+import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MeetService } from '../services/meet.service';
 import { StateService } from '../services/state.service';
 import { faker } from '@faker-js/faker';
-import { connect } from 'twilio-video';
+import { connect, LocalVideoTrack, createLocalVideoTrack } from 'twilio-video';
 import { firstValueFrom } from 'rxjs';
+import type { GaussianBlurBackgroundProcessor } from '@twilio/video-processors';
+import { Popupcomponent } from '../popup/popup';
+
 @Component({
   selector: 'app-precheck',
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, RouterModule, Popupcomponent],
   templateUrl: './precheck.html',
   styleUrl: './precheck.css',
 })
 export class Precheck implements OnInit {
-  constructor(private meetService: MeetService, private stateService: StateService) {}
+  constructor(
+    private meetService: MeetService,
+    private stateService: StateService,
+    private cdRef: ChangeDetectorRef
+  ) {}
   private router = inject(Router);
 
   @ViewChild('videoElement') videoElement!: ElementRef<HTMLVideoElement>;
+  @ViewChild('videoContainer') videoContainer!: ElementRef<HTMLVideoElement>;
   stream: MediaStream | null = null;
-  errorMessage = signal<string | null>(null);
+  errorMessage = '';
 
-  testState = signal<TestState>('idle');
-  cameraStatus = signal<CheckStatus>('pending');
-  micStatus = signal<CheckStatus>('pending');
-  networkStatus = signal<CheckStatus>('pending');
+  testState: TestState = 'idle';
+  cameraStatus: CheckStatus = 'pending';
+  micStatus: CheckStatus = 'pending';
+  networkStatus: CheckStatus = 'pending';
 
-  isAcknowledged = signal(false);
+  hasAgreed: boolean = false;
+  permissionRejected = false;
 
   mediaRecorder: MediaRecorder | null = null;
   recordedChunks: Blob[] = [];
-  recordedBlobUrl = signal<string | null>(null);
-  isPlaying = signal(false);
+  recordedBlobUrl: string | null = null;
+  isPlaying = false;
+  currentRecordingStream: any;
 
-  selectedSpeaker = signal<string>('default');
-  selectedMic = signal<string>('default');
-  selectedCamera = signal<string>('default');
+  selectedSpeaker = 'default';
+  selectedMic = 'default';
+  selectedCamera = 'default';
 
-  audioOutputDevices = signal<MediaDeviceInfo[]>([]);
-  audioInputDevices = signal<MediaDeviceInfo[]>([]);
-  videoInputDevices = signal<MediaDeviceInfo[]>([]);
+  audioOutputDevices: MediaDeviceInfo[] = [];
+  audioInputDevices: MediaDeviceInfo[] = [];
+  videoInputDevices: MediaDeviceInfo[] = [];
 
-  blur = signal(false);
-  noiseCancellationEnabled = signal(false);
+  blur: boolean = false;
+  originalTrack?: MediaStreamTrack;
+  localVideoTrack?: LocalVideoTrack;
+  blurProcessor?: GaussianBlurBackgroundProcessor;
+  noiseCancellation = false;
+  ncProcessor?: any;
+
+  async toggleNoiseCancellation() {
+    this.noiseCancellation = !this.noiseCancellation;
+
+    if (this.noiseCancellation) {
+      await this.enableNoiseCancellation();
+    } else {
+      await this.disableNoiseCancellation();
+    }
+    this.cdRef.detectChanges();
+  }
+  async enableNoiseCancellation() {
+    const track = this.stream?.getAudioTracks()[0];
+    if (!track) return;
+
+    await track.applyConstraints({
+      noiseSuppression: true,
+      echoCancellation: true,
+      autoGainControl: true,
+    });
+
+    // this.videoElement.nativeElement.srcObject = this.stream;
+    this.cdRef.detectChanges();
+  }
+
+  async disableNoiseCancellation() {
+    const track = this.stream?.getAudioTracks()[0];
+    if (!track) return;
+
+    await track.applyConstraints({
+      noiseSuppression: false,
+      echoCancellation: false,
+      autoGainControl: false,
+    });
+
+    this.videoElement.nativeElement.srcObject = this.stream;
+    this.cdRef.detectChanges();
+  }
+
+  async onDeviceChange(type: 'mic' | 'camera' | 'speaker', deviceId: string) {
+    try {
+      if (type === 'speaker') {
+        this.selectedSpeaker = deviceId;
+        if (this.videoElement.nativeElement.setSinkId) {
+          // @ts-ignore
+          await this.videoElement.nativeElement.setSinkId(deviceId);
+        }
+        return;
+      }
+
+      if (type === 'mic') {
+        this.selectedMic = deviceId;
+      }
+
+      if (type === 'camera') {
+        this.selectedCamera = deviceId;
+      }
+
+      const constraints: MediaStreamConstraints = {
+        video:
+          this.selectedCamera !== 'default' ? { deviceId: { exact: this.selectedCamera } } : true,
+
+        audio: this.selectedMic !== 'default' ? { deviceId: { exact: this.selectedMic } } : true,
+      };
+
+      const newStream = await navigator.mediaDevices.getUserMedia(constraints);
+
+      this.stopCamera();
+
+      this.stream = newStream;
+      this.currentRecordingStream = newStream;
+
+      this.videoElement.nativeElement.srcObject = newStream;
+      this.videoElement.nativeElement.muted = true;
+    } catch (err: any) {
+      console.error('Error updating stream:', err);
+      if (
+        err.name === 'NotAllowedError' ||
+        err.name === 'PermissionDeniedError' ||
+        err.message?.includes('permission')
+      ) {
+        this.permissionRejected = true;
+      }
+      this.errorMessage = 'Could not access device. Please check permissions.';
+      this.cameraStatus = 'failure';
+    }
+
+    this.cdRef.detectChanges();
+  }
 
   ngOnInit() {
     this.startCamera();
   }
 
+  // ngAfterViewInit() {
+  //   // attach the stream if already available
+  //   if (this.stream) {
+  //     this.videoElement.nativeElement.srcObject = this.stream;
+  //   }
+  // }
   ngOnDestroy() {
     this.stopCamera();
-    if (this.recordedBlobUrl()) {
-      URL.revokeObjectURL(this.recordedBlobUrl()!);
+    this.disableBlur();
+    this.stopCamera();
+    if (this.recordedBlobUrl) {
+      URL.revokeObjectURL(this.recordedBlobUrl!);
     }
+    this.stateService.setBlurBackground(this.blur);
+  }
+
+  async enableBlur() {
+    if (!this.stream) return;
+
+    const { GaussianBlurBackgroundProcessor } = await import('@twilio/video-processors');
+
+    const originalTrack = this.stream.getVideoTracks()[0];
+
+    this.localVideoTrack = new LocalVideoTrack(originalTrack);
+
+    this.blurProcessor = new GaussianBlurBackgroundProcessor({
+      assetsPath: '/twilio/build',
+      maskBlurRadius: 10,
+      blurFilterRadius: 5,
+    });
+
+    await this.blurProcessor.loadModel();
+    this.localVideoTrack.addProcessor(this.blurProcessor);
+
+    // recording uses processed track
+    this.currentRecordingStream = new MediaStream([
+      this.localVideoTrack.mediaStreamTrack,
+      ...this.stream.getAudioTracks(),
+    ]);
+
+    const processed = this.localVideoTrack.attach();
+    processed.muted = true;
+
+    const container = this.videoContainer.nativeElement;
+    container.replaceChildren(processed);
+  }
+
+  async disableBlur() {
+    if (!this.localVideoTrack || !this.blurProcessor || !this.stream) return;
+
+    this.localVideoTrack.removeProcessor(this.blurProcessor);
+    this.blurProcessor = undefined;
+
+    // back to original stream for recording
+    this.currentRecordingStream = this.stream;
+
+    const container = this.videoContainer.nativeElement;
+    container.replaceChildren(this.videoElement.nativeElement);
+
+    this.videoElement.nativeElement.srcObject = this.stream;
+    this.videoElement.nativeElement.muted = true;
+  }
+
+  async toggleBlur() {
+    this.blur = !this.blur;
+    console.log('blur is', this.blur);
+    if (this.blur) {
+      await this.enableBlur();
+    } else {
+      await this.disableBlur();
+    }
+    this.cdRef.detectChanges();
   }
 
   async startCamera() {
     try {
+      this.permissionRejected = false;
       this.stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
       if (this.videoElement && this.videoElement.nativeElement) {
         this.videoElement.nativeElement.srcObject = this.stream;
         this.videoElement.nativeElement.muted = true;
       }
-      this.cameraStatus.set('success');
+      this.cameraStatus = 'success';
       await this.getDevices();
       navigator.mediaDevices.addEventListener('devicechange', () => this.getDevices());
-    } catch (err) {
+    } catch (err: any) {
       console.error('Error accessing camera:', err);
-      this.errorMessage.set('Could not access camera. Please allow permissions.');
-      this.cameraStatus.set('failure');
+      this.errorMessage = 'Could not access camera. Please allow permissions.';
+      this.cameraStatus = 'failure';
+      if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
+        this.permissionRejected = true;
+      }
       await this.getDevices();
     }
+    this.cdRef.detectChanges();
   }
 
   async getDevices() {
     try {
       const devices = await navigator.mediaDevices.enumerateDevices();
 
-      this.audioOutputDevices.set(devices.filter((d) => d.kind === 'audiooutput'));
-      this.audioInputDevices.set(devices.filter((d) => d.kind === 'audioinput'));
-      this.videoInputDevices.set(devices.filter((d) => d.kind === 'videoinput'));
+      this.audioOutputDevices = devices.filter((d) => d.kind === 'audiooutput');
+      this.audioInputDevices = devices.filter((d) => d.kind === 'audioinput');
+      this.videoInputDevices = devices.filter((d) => d.kind === 'videoinput');
 
-      if (this.audioOutputDevices().length > 0 && this.selectedSpeaker() === 'default') {
-        this.selectedSpeaker.set(this.audioOutputDevices()[0].deviceId);
+      if (this.audioOutputDevices.length > 0 && this.selectedSpeaker === 'default') {
+        this.selectedSpeaker = this.audioOutputDevices[0].deviceId;
       }
-      if (this.audioInputDevices().length > 0 && this.selectedMic() === 'default') {
-        this.selectedMic.set(this.audioInputDevices()[0].deviceId);
+      if (this.audioInputDevices.length > 0 && this.selectedMic === 'default') {
+        this.selectedMic = this.audioInputDevices[0].deviceId;
       }
-      if (this.videoInputDevices().length > 0 && this.selectedCamera() === 'default') {
-        this.selectedCamera.set(this.videoInputDevices()[0].deviceId);
+      if (this.videoInputDevices.length > 0 && this.selectedCamera === 'default') {
+        this.selectedCamera = this.videoInputDevices[0].deviceId;
       }
     } catch (err) {
       console.error('Error enumerating devices:', err);
     }
+    this.cdRef.detectChanges();
   }
 
   stopCamera() {
@@ -103,17 +280,14 @@ export class Precheck implements OnInit {
   }
 
   startRecording() {
-    if (!this.stream) return;
+    const streamToRecord = this.currentRecordingStream || this.stream;
+    if (!streamToRecord) return;
 
-    if (this.videoElement?.nativeElement) {
-      this.videoElement.nativeElement.muted = true;
-    }
-
-    this.testState.set('running');
+    this.testState = 'running';
     this.recordedChunks = [];
 
     try {
-      this.mediaRecorder = new MediaRecorder(this.stream);
+      this.mediaRecorder = new MediaRecorder(streamToRecord);
       this.mediaRecorder.ondataavailable = (event) => {
         if (event.data.size > 0) {
           this.recordedChunks.push(event.data);
@@ -122,7 +296,7 @@ export class Precheck implements OnInit {
       this.mediaRecorder.onstop = () => {
         const blob = new Blob(this.recordedChunks, { type: 'video/webm' });
         const url = URL.createObjectURL(blob);
-        this.recordedBlobUrl.set(url);
+        this.recordedBlobUrl = url;
       };
       this.mediaRecorder.start();
     } catch (e) {
@@ -135,11 +309,11 @@ export class Precheck implements OnInit {
       this.mediaRecorder.stop();
     }
 
-    this.testState.set('analyzing');
+    this.testState = 'analyzing';
 
-    this.cameraStatus.set('checking');
-    this.micStatus.set('pending');
-    this.networkStatus.set('pending');
+    this.cameraStatus = 'checking';
+    this.micStatus = 'pending';
+    this.networkStatus = 'pending';
 
     this.runChecks();
   }
@@ -150,30 +324,31 @@ export class Precheck implements OnInit {
       this.stream.getVideoTracks().length > 0 &&
       this.stream.getVideoTracks()[0].readyState === 'live'
     ) {
-      this.cameraStatus.set('success');
+      this.cameraStatus = 'success';
     } else {
-      this.cameraStatus.set('failure');
+      this.cameraStatus = 'failure';
     }
 
-    this.micStatus.set('checking');
+    this.micStatus = 'checking';
 
     const micWorks = await this.isAudioWorking();
-    this.micStatus.set(micWorks ? 'success' : 'failure');
+    this.micStatus = micWorks ? 'success' : 'failure';
 
-    this.networkStatus.set('checking');
+    this.networkStatus = 'checking';
 
     const networkWorks = await this.checkNetworkSpeed();
-    this.networkStatus.set(networkWorks ? 'success' : 'failure');
+    this.networkStatus = networkWorks ? 'success' : 'failure';
 
     if (
-      this.cameraStatus() === 'success' &&
-      this.micStatus() === 'success' &&
-      this.networkStatus() === 'success'
+      this.cameraStatus === 'success' &&
+      this.micStatus === 'success' &&
+      this.networkStatus === 'success'
     ) {
-      this.testState.set('completed');
+      this.testState = 'completed';
     } else {
-      this.testState.set('completed');
+      this.testState = 'completed';
     }
+    this.cdRef.detectChanges();
   }
 
   isAudioWorking(): Promise<boolean> {
@@ -184,15 +359,17 @@ export class Precheck implements OnInit {
       }
 
       try {
-        const recorder = new MediaRecorder(this.stream);
-        let chunks: BlobPart[] | undefined = [];
-        recorder.ondataavailable = (e) => chunks.push(e.data);
-        recorder.onstop = () => {
-          const blob = new Blob(chunks);
-          resolve(blob.size > 0);
-        };
-        recorder.start();
-        setTimeout(() => recorder.stop(), 2000);
+        const ctx = new AudioContext();
+        const source = ctx.createMediaStreamSource(this.stream);
+        const analyser = ctx.createAnalyser();
+        source.connect(analyser);
+        const waveform = new Uint8Array(analyser.fftSize);
+        console.log(analyser.fftSize);
+        // analyser.getByteTimeDomainData(waveform);
+
+        // ctx.close();
+
+        resolve(waveform.some((v) => v !== 128));
       } catch (e) {
         console.error('Error checking audio:', e);
         resolve(false);
@@ -201,68 +378,72 @@ export class Precheck implements OnInit {
   }
 
   async checkNetworkSpeed(): Promise<boolean> {
-    try {
-      const identity = faker.person.firstName();
+    return await new Promise<boolean>(async (resolve) => {
+      try {
+        const identity = faker.person.firstName();
 
-      const meetRes = await firstValueFrom(this.meetService.createMeet());
-      const meetId = meetRes.meetId;
+        const meetRes = await firstValueFrom(this.meetService.createMeet());
+        const meetId = meetRes.meetId;
 
-      const joinRes = await firstValueFrom(this.meetService.joinMeet(meetId, identity));
+        const joinRes = await firstValueFrom(this.meetService.joinMeet(meetId, identity));
 
-      if (!joinRes?.success || !joinRes?.token) {
-        throw new Error('unexpected error: no token returned');
-      }
+        if (!joinRes?.success || !joinRes?.token) {
+          throw new Error('unexpected error: no token returned');
+        }
 
-      const token = joinRes.token;
+        const token = joinRes.token;
 
-      const room = await connect(token, {
-        name: 'network-test-room',
-        audio: true,
-        video: false,
-        networkQuality: { local: 1 },
-      });
+        const room = await connect(token, {
+          name: 'network-test-room',
+          audio: true,
+          video: false,
+          networkQuality: { local: 1 },
+        });
 
-      return await new Promise<boolean>((resolve) => {
         room.localParticipant.once('networkQualityLevelChanged', (level: number) => {
           console.log('network level', level);
 
           room.disconnect();
-
-          resolve(level >= 3);
+          if (level >= 3) {
+            resolve(true);
+          } else {
+            resolve(false);
+          }
         });
-      });
-    } catch (err) {
-      console.error('network test failed:', err);
-      return false;
-    }
+      } catch (error) {
+        console.error('network error', error);
+        resolve(false);
+      }
+    });
+    this.cdRef.detectChanges();
   }
 
   playRecording() {
-    if (this.videoElement && this.videoElement.nativeElement && this.recordedBlobUrl()) {
+    if (this.videoElement && this.videoElement.nativeElement && this.recordedBlobUrl) {
       const video = this.videoElement.nativeElement;
       video.srcObject = null;
-      video.src = this.recordedBlobUrl()!;
+      video.src = this.recordedBlobUrl!;
       video.muted = false;
       video
         .play()
         .then(() => {
-          this.isPlaying.set(true);
+          this.isPlaying = true;
         })
         .catch((err) => console.error('error playing recording:', err));
 
       video.onended = () => {
-        this.isPlaying.set(false);
+        this.isPlaying = false;
       };
     }
   }
 
   tryAgain() {
-    if (this.recordedBlobUrl()) {
-      URL.revokeObjectURL(this.recordedBlobUrl()!);
-      this.recordedBlobUrl.set(null);
+    if (this.recordedBlobUrl) {
+      URL.revokeObjectURL(this.recordedBlobUrl!);
+      this.recordedBlobUrl = null;
     }
     this.recordedChunks = [];
-    this.isPlaying.set(false);
+    this.isPlaying = false;
 
     if (this.videoElement && this.videoElement.nativeElement) {
       this.videoElement.nativeElement.src = '';
@@ -270,15 +451,15 @@ export class Precheck implements OnInit {
       this.videoElement.nativeElement.muted = true;
     }
 
-    this.testState.set('idle');
-    this.cameraStatus.set('pending');
-    this.micStatus.set('pending');
-    this.networkStatus.set('pending');
-    this.isAcknowledged.set(false);
+    this.testState = 'idle';
+    this.cameraStatus = 'pending';
+    this.micStatus = 'pending';
+    this.networkStatus = 'pending';
+    this.hasAgreed = false;
   }
 
   joinMeeting() {
-    if (this.testState() === 'completed' && this.isAcknowledged()) {
+    if (this.testState === 'completed' && this.hasAgreed) {
       const meetId = this.stateService.meetId();
       if (!meetId) {
         this.router.navigateByUrl('/lobby');

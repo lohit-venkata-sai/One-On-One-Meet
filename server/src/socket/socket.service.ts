@@ -1,33 +1,30 @@
 import { Injectable } from '@nestjs/common';
-import { Socket } from 'socket.io';
+import { Server, Socket } from 'socket.io';
 
 @Injectable()
 export class SocketService {
-  private clients = new Map<string, Socket>();
+  handleConnection(socket: Socket, server: Server) {
+    console.log('client connected:', socket.id);
 
-  addClient(userId: string, socket: Socket) {
-    this.clients.set(userId, socket);
-  }
+    socket.on('join:room', (room: string) => {
+      socket.join(room);
 
-  removeBySocketId(socketId: string) {
-    for (const [userId, socket] of this.clients.entries()) {
-      if (socket.id === socketId) {
-        this.clients.delete(userId);
-        break;
-      }
-    }
-  }
+      console.log(`socket ${socket.id} joined room ${room}`);
 
-  emitToUser(userId: string, event: string, data: any) {
-    const socket = this.clients.get(userId);
-    if (socket) {
-      socket.emit(event, data);
-    }
-  }
+      socket.to(room).emit('new:user', socket.id);
 
-  emitToAll(event: string, data: any) {
-    for (const socket of this.clients.values()) {
-      socket.emit(event, data);
-    }
+      socket.emit('join:room', room);
+    });
+
+    socket.on('new:message', (payload) => {
+      console.log('message:', payload.message);
+      console.log('room:', payload.room);
+
+      server.to(payload.room).emit('new:message', payload);
+    });
+
+    socket.on('disconnect', () => {
+      console.log('user disconnected:', socket.id);
+    });
   }
 }

@@ -24,7 +24,7 @@
                     [&::-webkit-scrollbar-thumb]:rounded-lg
                     [&::-webkit-scrollbar-thumb:hover]:bg-[#4b515b]
                     scrollbar-thin">
-                    @for (msg of chatMessages(); track $index) {
+                    @for (msg of chatMessages; track $index) {
                     <div class="flex gap-2.5" [class.justify-end]="socketId === msg.socketId"
                         [class.justify-start]="socketId !== msg.socketId">
                         <span class="py-2 px-4 rounded-md max-w-[70%] text-wrap wrap-break-word"
@@ -55,12 +55,12 @@
         <div class="flex flex-row gap-4">
             <section class="relative">
                 <img src="Frame 1000007594.svg" alt="">
-                <img [src]="isMicOn() ? 'Mic (2).svg' : 'Mic.svg'" (click)="toggleMic()"
+                <img [src]="isMicOn ? 'Mic (2).svg' : 'Mic.svg'" (click)="toggleMic()"
                     class="absolute cursor-pointer top-0 left-0" alt="">
             </section>
             <section class="relative">
                 <img src="Frame 1000007594.svg" alt="">
-                <img [src]="isCamOn() ? 'Camera (2).svg' : 'Camera.svg'" (click)="toggleCam()"
+                <img [src]="isCamOn ? 'Camera (2).svg' : 'Camera.svg'" (click)="toggleCam()"
                     class="absolute cursor-pointer top-0 left-0" alt="">
             </section>
             <section>

@@ -53,7 +53,7 @@ export class Lobby {
         }
         this.loading = false;
 
-        console.log(this.stateService.meetId);
+        console.log(this.stateService.meetId());
       },
       error: () => {
         this.error = '404 — Meeting not found';
