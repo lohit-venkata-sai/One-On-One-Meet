@@ -24,7 +24,7 @@ export class Lobby {
   title = 'Technology';
   experience = '0-2';
   duration = '30 mins';
-  isAgreed: boolean = false;
+  hasAgreed: boolean = false;
   loading = false;
   error = '';
   showPopUp: boolean = false;
@@ -53,7 +53,7 @@ export class Lobby {
         }
         this.loading = false;
 
-        console.log(this.stateService.meetId());
+        console.log(this.stateService.meetId);
       },
       error: () => {
         this.error = '404 — Meeting not found';
@@ -79,7 +79,7 @@ export class Lobby {
   }
 
   handleIsAgreed() {
-    this.isAgreed = !this.isAgreed;
+    this.hasAgreed = !this.hasAgreed;
   }
 
   ngOnInit() {

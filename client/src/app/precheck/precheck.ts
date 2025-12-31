@@ -153,7 +153,7 @@ export class Precheck implements OnInit {
   }
 
   // ngAfterViewInit() {
-  //   // attach the stream if already available
+  //
   //   if (this.stream) {
   //     this.videoElement.nativeElement.srcObject = this.stream;
   //   }
@@ -166,6 +166,7 @@ export class Precheck implements OnInit {
       URL.revokeObjectURL(this.recordedBlobUrl!);
     }
     this.stateService.setBlurBackground(this.blur);
+    this.stateService.setNoiceCancellation(this.noiseCancellation);
   }
 
   async enableBlur() {
@@ -460,7 +461,7 @@ export class Precheck implements OnInit {
 
   joinMeeting() {
     if (this.testState === 'completed' && this.hasAgreed) {
-      const meetId = this.stateService.meetId();
+      const meetId = this.stateService.meetId;
       if (!meetId) {
         this.router.navigateByUrl('/lobby');
         return;

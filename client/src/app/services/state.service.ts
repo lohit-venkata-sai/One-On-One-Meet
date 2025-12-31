@@ -6,25 +6,30 @@ import { ChatMsg } from './socket.service';
 })
 export class StateService {
   constructor() {}
-  meetId = signal<string | null>(null);
-  token = signal<string | null>(null);
+  meetId: string | null = null;
+  token: string | null = null;
 
   speakerId?: string | null;
   micId?: string | null;
   cameraId?: string | null;
 
   chatMessages: ChatMsg[] = [];
-  blurBackground: boolean = true;
+
+  blurBackground: boolean = false;
+  noiseCancellation = false;
 
   setBlurBackground(blur: boolean) {
     this.blurBackground = blur;
   }
+  setNoiceCancellation(bool: boolean) {
+    this.noiseCancellation = bool;
+  }
 
   setMeetId(meetId: string) {
-    this.meetId.set(meetId);
+    this.meetId = meetId;
   }
   setToken(token: string) {
-    this.token.set(token);
+    this.token = token;
   }
   setDevices(devices: { speakerId: string | null; micId: string | null; cameraId: string | null }) {
     this.speakerId = devices.speakerId;

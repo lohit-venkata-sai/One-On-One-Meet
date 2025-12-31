@@ -1,124 +1,143 @@
-<div class="bg-[#1E2024] p-4 sm:p-6 gap-6 rounded-md flex flex-col w-full h-full">
-    <div>
-        <p class="text-sm sm:text-base">
-            Hey {{name}}, Welcome to Your {{title}}
-        </p>
-    </div>
+<div class="container mx-auto">
+    <div class="bg-[#1E2024] p-4 sm:p-6 gap-6 rounded-md flex flex-col w-full h-full">
 
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <span class="flex flex-col gap-1">
-            <span class="text-sm opacity-80">Title</span>
-            <span class="font-semibold">{{title}}</span>
-        </span>
-
-        <span class="flex flex-col gap-1">
-            <span class="text-sm opacity-80">Expert name</span>
-            <span class="font-semibold">{{expert_name}}</span>
-        </span>
-
-        <span class="flex flex-col gap-1">
-            <span class="text-sm opacity-80">Experience</span>
-            <span class="font-semibold">{{experience}}</span>
-        </span>
-
-        <span class="flex flex-col gap-1">
-            <span class="text-sm opacity-80">Duration</span>
-            <span class="font-semibold">{{duration}}</span>
-        </span>
-    </div>
-
-    <div class="p-4 sm:p-6 gap-4 rounded-md flex flex-col">
-        <h2 class="font-semibold text-base sm:text-lg">
-            Instructions
-        </h2>
-
-        <ul class="list-disc pl-5 space-y-2 text-sm sm:text-base">
-            <li>Test your audio and video. Adjust the settings if necessary.</li>
-            <li>Sit in a well-lit area with your face clearly visible and no background noise.</li>
-            <li>Avoid having moving objects in the background.</li>
-            <li>Maintain a stable internet connection.</li>
-            <li>Ensure your device is charged or plugged in to avoid any interruptions.</li>
-            <li>
-                Please remain in the meeting room for at least 10 minutes. This time is
-                necessary to capture your attendance, so stay even if the other person has
-                not yet attended.
-            </li>
-            <li>
-                The whiteboard in the meeting room works both ways; any changes you make are
-                visible to the other person.
-            </li>
-            <li>
-                The code console is limited to your end. Please share your screen to show
-                your code console to the other person.
-            </li>
-            <li>
-                Keep an eye on the time; you will be prompted 2 minutes before the meeting
-                ends.
-            </li>
-        </ul>
-
-        <!-- Footer -->
-        <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
-            <div class="flex gap-2 items-start sm:items-center">
-                <input id="checkbox" (click)="handleIsAgreed()" name="checkbox" type="checkbox" class="mt-1 sm:mt-0">
-                <label for="checkbox" class="text-sm sm:text-base">
-                    I have read and understood all instructions
-                </label>
-            </div>
-
-            <button [disabled]="!isAgreed" (click)="onNextBtnClick()"
-                class=" cursor-pointer py-2.5 px-5 bg-[#F0EBFF] rounded-md text-[#6834FF] w-full sm:w-auto text-center font-medium">
-                Next &gt;
-            </button>
+        <!-- header -->
+        <div class="container">
+            <p class="text-sm sm:text-base">
+                Hey {{name}}, Welcome to Your {{title}}
+            </p>
         </div>
-    </div>
-    <!-- @if(showPopUp){ -->
-    <div *ngIf="showPopUp"
-        class="absolute shadow-sm z-99 bg-black/0 backdrop-blur-[10px] h-screen w-screen overflow-hidden top-0 right-0  flex justify-center items-center">
-        <div class="bg-[#1E2024] border-4 border-black/20 rounded-md flex flex-col p-6 gap-2">
-            <div class=" flex flex-col gap-3 ">
-                <h1 class="font-600 text-[25px]">Camera & Microphone Access Required</h1>
-                <p class="text-4 font-400 text-[#AFAFAF]">
-                    To join the interview, you need to grant access to your camera and microphone.
-                </p>
+
+        <!-- details grid -->
+        <div class="container">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <span class="flex flex-col gap-1">
+                    <span class="text-sm opacity-80">Title</span>
+                    <span class="font-semibold">{{title}}</span>
+                </span>
+
+                <span class="flex flex-col gap-1">
+                    <span class="text-sm opacity-80">Expert name</span>
+                    <span class="font-semibold">{{expert_name}}</span>
+                </span>
+
+                <span class="flex flex-col gap-1">
+                    <span class="text-sm opacity-80">Experience</span>
+                    <span class="font-semibold">{{experience}}</span>
+                </span>
+
+                <span class="flex flex-col gap-1">
+                    <span class="text-sm opacity-80">Duration</span>
+                    <span class="font-semibold">{{duration}}</span>
+                </span>
             </div>
-            <div class="flex flex-col gap-6">
-                <div class="flex flex-col gap-2 rounded-md p-4 bg-[#272b30]">
-                    <div class="flex justify-between items-center">
-                        <h4 class="text-[18px] font-semibold">Permission Denied</h4>
-                        <span class="text-[#BAA2FF] text-[14px] cursor-pointer underline ">Learn how to enable?</span>
+        </div>
+
+        <!-- instructions -->
+        <div class="container">
+            <div class="p-4 sm:p-6 gap-4 rounded-md flex flex-col">
+
+                <h2 class="font-semibold text-base sm:text-lg">
+                    Instructions
+                </h2>
+
+                <ul class="list-disc pl-5 space-y-2 text-sm sm:text-base">
+                    <li>Test your audio and video. Adjust the settings if necessary.</li>
+                    <li>Sit in a well-lit area with your face clearly visible and no background noise.</li>
+                    <li>Avoid having moving objects in the background.</li>
+                    <li>Maintain a stable internet connection.</li>
+                    <li>Ensure your device is charged or plugged in to avoid any interruptions.</li>
+                    <li> Please remain in the meeting room for at least 10 minutes. This time is necessary to capture
+                        your attendance,
+                        so stay even if the other person has not yet attended. </li>
+                    <li> The whiteboard in the meeting room works both ways; any changes you make are visible to the
+                        other person. </li>
+                    <li> The code console is limited to your end. Please share your screen to show your code console to
+                        the other
+                        person. </li>
+                    <li> Keep an eye on the time; you will be prompted 2 minutes before the meeting ends. </li>
+                </ul>
+
+                <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
+                    <div class="flex gap-2 items-start sm:items-center">
+                        <input id="checkbox" (click)="handleIsAgreed()" name="checkbox" type="checkbox"
+                            class="mt-1 sm:mt-0">
+                        <label for="checkbox" class="text-sm sm:text-base">
+                            I have read and understood all instructions
+                        </label>
                     </div>
-                    <div class="text-[#AFAFAF] text-[16px] flex flex-col gap-1">
-                        <div class="flex items-center gap-2">
-                            <img src="Icon button.svg" alt="">
-                            <span>Camera access is blocked.</span>
-                        </div>
-                        <div class="flex items-center gap-2">
-                            <img src="Icon button (1).svg" alt="">
-                            <span>Microphone access is blocked.</span>
-                        </div>
-                    </div>
+
+                    <button [disabled]="!hasAgreed" (click)="onNextBtnClick()"
+                        class=" cursor-pointer py-2.5 px-5 bg-[#F0EBFF] rounded-md text-[#6834FF] w-full sm:w-auto text-center font-medium">
+                        Next >
+                    </button>
                 </div>
-                <div class="rounded-md flex flex-col gap-2 bg-[#272b30] p-2">
-                    <h4 class="text-[18px] font-semibold">How to Allow Permissions</h4>
-                    <div class="flex flex-col gap-2">
-                        <div class="flex gap-3">
-                            <span class="px-3 py-1 bg-[#1E2024] rounded-full text-[#AFAFAF]">1</span>
-                            <span>Look for a camera or lock icon in your browser's address bar</span>
-                        </div>
-                        <div class="flex gap-3">
-                            <span class="px-3 py-1 bg-[#1E2024] rounded-full text-[#AFAFAF]">2</span>
-                            <span>Look for a camera or lock icon in your browser's address bar</span>
-                        </div>
-                        <div class="flex gap-3">
-                            <span class="px-3 py-1 bg-[#1E2024] rounded-full text-[#AFAFAF]">3</span>
-                            <span>Look for a camera or lock icon in your browser's address bar</span>
-                        </div>
+
+            </div>
+        </div>
+
+        <!-- popup -->
+        <div *ngIf="showPopUp"
+            class="absolute shadow-sm z-99 bg-black/0 backdrop-blur-[10px] h-screen w-screen overflow-hidden top-0 right-0 flex justify-center items-center">
+
+            <div class="container">
+                <div class="bg-[#1E2024] border-4 border-black/20 rounded-md flex flex-col p-6 gap-2">
+
+                    <div class="flex flex-col gap-3">
+                        <h1 class="font-600 text-[25px]">Camera & Microphone Access Required</h1>
+                        <p class="text-4 font-400 text-[#AFAFAF]">
+                            To join the interview, you need to grant access to your camera and microphone.
+                        </p>
                     </div>
+
+                    <div class="flex flex-col gap-6">
+                        <div class="flex flex-col gap-2 rounded-md p-4 bg-[#272b30]">
+                            <div class="flex justify-between items-center">
+                                <h4 class="text-[18px] font-semibold">Permission Denied</h4>
+                                <span class="text-[#BAA2FF] text-[14px] cursor-pointer underline">Learn how to
+                                    enable?</span>
+                            </div>
+
+                            <div class="text-[#AFAFAF] text-[16px] flex flex-col gap-1">
+                                <div class="flex items-center gap-2">
+                                    <img src="Icon button.svg" alt="">
+                                    <span>Camera access is blocked.</span>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <img src="Icon button (1).svg" alt="">
+                                    <span>Microphone access is blocked.</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="rounded-md flex flex-col gap-2 bg-[#272b30] p-2">
+                            <h4 class="text-[18px] font-semibold">How to Allow Permissions</h4>
+
+                            <div class="flex flex-col gap-2">
+                                <div class="flex gap-3">
+                                    <span class="px-3 py-1 bg-[#1E2024] rounded-full text-[#AFAFAF]">1</span>
+                                    <span>Look for a camera or lock icon in your browser's address bar</span>
+                                </div>
+
+                                <div class="flex gap-3">
+                                    <span class="px-3 py-1 bg-[#1E2024] rounded-full text-[#AFAFAF]">2</span>
+                                    <span>Look for a camera or lock icon in your browser's address bar</span>
+                                </div>
+
+                                <div class="flex gap-3">
+                                    <span class="px-3 py-1 bg-[#1E2024] rounded-full text-[#AFAFAF]">3</span>
+                                    <span>Look for a camera or lock icon in your browser's address bar</span>
+                                </div>
+
+                            </div>
+                        </div>
+
+                    </div>
+
                 </div>
             </div>
 
         </div>
+
     </div>
-    <!-- } -->
 </div>
