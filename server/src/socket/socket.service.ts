@@ -16,11 +16,11 @@ export class SocketService {
       socket.emit('join:room', room);
     });
 
-    socket.on('new:message', (payload) => {
-      console.log('message:', payload.message);
-      console.log('room:', payload.room);
+    socket.on('new:message', (data) => {
+      console.log('message:', data.message);
+      console.log('room:', data.room);
 
-      server.to(payload.room).emit('new:message', payload);
+      server.to(data.room).emit('new:message', data);
     });
 
     socket.on('disconnect', () => {

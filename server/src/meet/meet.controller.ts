@@ -16,8 +16,8 @@ export class MeetController {
     return this.meetService.joinMeet(body.meetId, body.identity);
   }
   @Post('leave')
-  leaveMeet(@Body() body: { meetId: String }) {
-    return this.meetService.leaveMeet(body.meetId);
+  leaveMeet(@Body() body: { meetId: string; identity: string }) {
+    return this.meetService.leaveMeet(body.meetId, body.identity);
   }
   @Get('isvalid/:meetId')
   isValidMeetId(@Param('meetId') meetId: string) {

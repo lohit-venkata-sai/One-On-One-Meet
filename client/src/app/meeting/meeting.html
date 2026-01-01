@@ -4,9 +4,15 @@
 
         <div class="col-span-8 relative flex justify-center border rounded-md border-white/20 items-center bg-gray-800">
             <div id="remote-video" class='flex-1 object-cover aspect-video'></div>
-            <div id="local-video"
+
+            <div id="local-video" [class.bg-black]="isScreenSharing"
                 class="absolute w-61.5 h-46 object-contain aspect-video border rounded-md bottom-1 right-1">
             </div>
+            <p *ngIf="isScreenSharing"
+                class="absolute p-2 rounded-md  bottom-20 right-8  z-50 text-white text-sm bg-black/40  justify-center pointer-events-none">
+                Your screen
+                is being shared
+            </p>
         </div>
 
         <div class="col-span-4 flex flex-col gap-4 min-h-0">
@@ -64,7 +70,8 @@
                     class="absolute cursor-pointer top-0 left-0" alt="">
             </section>
             <section>
-                <img src="Share screen.svg" alt="">
+                <img [src]="isScreenSharing? 'screen-share-enabled.svg': 'Share screen.svg'"
+                    (click)="toggleScreenShare()" alt="">
             </section>
             <section>
                 <img src="Mic (1).svg" alt="">

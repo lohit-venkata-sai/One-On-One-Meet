@@ -10,7 +10,7 @@ import { Header } from '../header/header';
       <app-header />
     </header>
 
-    <main class="flex-1 flex flex-col text-white">
+    <main class="flex-1 flex flex-col text-white h-full">
       <router-outlet />
     </main>
   `,

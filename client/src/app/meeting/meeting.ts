@@ -1,5 +1,5 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
-import { Router } from '@angular/router';
+import { Router, RouterModule } from '@angular/router';
 import { StateService } from '../services/state.service';
 
 import {
@@ -11,20 +11,23 @@ import {
   createLocalVideoTrack,
   RemoteVideoTrack,
   RemoteAudioTrack,
+  LocalAudioTrack,
+  LocalVideoTrack,
 } from 'twilio-video';
 
 import { Header } from '../header/header';
 import { ChatMsg, SocketService } from '../services/socket.service';
 import { FormsModule } from '@angular/forms';
 import { GaussianBlurBackgroundProcessor } from '@twilio/video-processors';
-import { LocalVideoTrack } from 'twilio-video';
 import { Popupcomponent } from '../popup/popup';
+import { ChangeDetectorRef } from '@angular/core';
+import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'app-meeting',
   templateUrl: './meeting.html',
   styleUrl: './meeting.css',
-  imports: [Header, FormsModule, Popupcomponent],
+  imports: [Header, FormsModule, Popupcomponent, RouterModule, CommonModule],
   host: {
     class: 'block flex flex-col flex-1 bg-black h-screen',
   },
@@ -37,6 +40,8 @@ export class Meeting implements OnInit, OnDestroy {
 
   blurProcessor?: GaussianBlurBackgroundProcessor;
   localVideoTrack?: LocalVideoTrack;
+  isScreenSharing = false;
+  screenTrack?: LocalVideoTrack;
 
   blurEnabled: boolean = false;
   noiseCancellationEnabled: boolean = false;
@@ -50,7 +55,8 @@ export class Meeting implements OnInit, OnDestroy {
   constructor(
     private state: StateService,
     private router: Router,
-    private socketService: SocketService
+    private socketService: SocketService,
+    private cdr: ChangeDetectorRef
   ) {
     this.chatMessages = this.state.chatMessages;
     this.socketId = this.socketService.socket.id;
@@ -78,12 +84,10 @@ export class Meeting implements OnInit, OnDestroy {
         video: false,
       });
 
-      // remote participants
       this.room.participants.forEach((p) => this.handleParticipant(p));
       this.room.on('participantConnected', (p) => this.handleParticipant(p));
       this.room.on('participantDisconnected', (p) => console.log('Participant left:', p.identity));
 
-      // create tracks
       await this.setupAudioTrack();
       await this.camOn();
     } catch (err) {
@@ -134,7 +138,7 @@ export class Meeting implements OnInit, OnDestroy {
       const container = document.getElementById('local-video');
       if (!container) return;
 
-      container.replaceChildren();
+      Array.from(container.querySelectorAll('video')).forEach((v) => v.remove());
 
       const track = await createLocalVideoTrack();
       this.localVideoTrack = track;
@@ -231,6 +235,43 @@ export class Meeting implements OnInit, OnDestroy {
     participant.on('trackUnsubscribed', (track: RemoteVideoTrack | RemoteAudioTrack) => {
       track.detach().forEach((el) => el.remove());
     });
+  }
+
+  async startScreenShare() {
+    try {
+      this.camOff();
+      // if (this.isScreenSharing == false) return;
+      const stream = navigator.mediaDevices.getDisplayMedia({ video: true, audio: false });
+      const screenMediaTrack = (await stream).getVideoTracks()[0];
+
+      const { LocalVideoTrack } = await import('twilio-video');
+
+      this.screenTrack = new LocalVideoTrack(screenMediaTrack, { name: 'screen' });
+
+      await this.room.localParticipant.publishTrack(this.screenTrack);
+      this.isScreenSharing = true;
+      screenMediaTrack.onended = () => {
+        this.stopScreenShare();
+      };
+    } catch (error) {
+      console.log('error at start screen share', error);
+    }
+  }
+  async stopScreenShare() {
+    if (!this.screenTrack) return;
+
+    this.room.localParticipant.unpublishTrack(this.screenTrack);
+    this.screenTrack.stop();
+
+    this.screenTrack = undefined;
+    this.isScreenSharing = false;
+    this.camOn();
+  }
+  toggleScreenShare() {
+    this.isScreenSharing = !this.isScreenSharing;
+    console.log('is screen sharing', this.isScreenSharing);
+    this.isScreenSharing ? this.startScreenShare() : this.stopScreenShare();
+    this.cdr.detectChanges();
   }
   leaveMeeting() {
     if (!this.room) return;

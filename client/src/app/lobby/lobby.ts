@@ -4,10 +4,11 @@ import { MeetService } from '../services/meet.service';
 import { StateService } from '../services/state.service';
 import { CommonModule } from '@angular/common';
 import { SocketService } from '../services/socket.service';
+import { FormsModule } from '@angular/forms';
 
 @Component({
   selector: 'app-lobby',
-  imports: [RouterModule, CommonModule],
+  imports: [RouterModule, CommonModule, FormsModule],
   templateUrl: './lobby.html',
   styleUrl: './lobby.css',
 })
@@ -98,7 +99,7 @@ export class Lobby {
       });
       streamCam.getTracks().forEach((track) => track.stop());
       // this.showPopUp = false;
-      console.log(this.showPopUp);
+      // console.log(this.showPopUp);
       document.body.style.overflow = '';
     } catch (error) {
       // this.showPopUp = true;

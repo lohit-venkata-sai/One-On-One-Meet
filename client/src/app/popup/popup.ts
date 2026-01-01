@@ -11,7 +11,7 @@ import { CommonModule } from '@angular/common';
       class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4"
     >
       <div
-        class="bg-[#1E1E1E] rounded-xl shadow-2xl w-full max-w-[600px] border border-white/10 overflow-hidden"
+        class="bg-[#1E1E1E] rounded-xl shadow-2xl w-full max-w-150 border border-white/10 overflow-hidden"
       >
         <div class="p-6 pb-2">
           <h2 class="text-2xl font-semibold text-white mb-2">
@@ -26,10 +26,7 @@ import { CommonModule } from '@angular/common';
           <div class="bg-[#272B30] rounded-lg p-5 border border-white/5">
             <div class="flex justify-between items-start mb-4">
               <h3 class="text-white font-medium text-lg">Permission Denied</h3>
-              <a
-                href="https://support.google.com/chrome/answer/2693767"
-                target="_blank"
-                class="text-[#8E6CFF] text-sm hover:underline"
+              <a href="" target="_blank" class="text-[#8E6CFF] text-sm hover:underline"
                 >Learn how to enable?</a
               >
             </div>
@@ -39,20 +36,7 @@ import { CommonModule } from '@angular/common';
                 <div
                   class="w-8 h-8 rounded-full border border-red-500/30 bg-red-500/10 flex items-center justify-center text-red-500 shrink-0"
                 >
-                  <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"
-                    />
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M3 3l18 18"
-                    />
-                  </svg>
+                  <img src="Camera (3).svg" />
                 </div>
                 <span class="text-gray-400">Camera access is blocked.</span>
               </div>
@@ -61,20 +45,7 @@ import { CommonModule } from '@angular/common';
                 <div
                   class="w-8 h-8 rounded-full border border-red-500/30 bg-red-500/10 flex items-center justify-center text-red-500 shrink-0"
                 >
-                  <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"
-                    />
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M3 3l18 18"
-                    />
-                  </svg>
+                  <img src="Icon button (3).svg" />
                 </div>
                 <span class="text-gray-400">Microphone access is blocked.</span>
               </div>

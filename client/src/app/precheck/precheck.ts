@@ -152,12 +152,6 @@ export class Precheck implements OnInit {
     this.startCamera();
   }
 
-  // ngAfterViewInit() {
-  //
-  //   if (this.stream) {
-  //     this.videoElement.nativeElement.srcObject = this.stream;
-  //   }
-  // }
   ngOnDestroy() {
     this.stopCamera();
     this.disableBlur();
@@ -187,17 +181,25 @@ export class Precheck implements OnInit {
     await this.blurProcessor.loadModel();
     this.localVideoTrack.addProcessor(this.blurProcessor);
 
-    // recording uses processed track
+    const processed = this.localVideoTrack.attach() as HTMLVideoElement;
+    processed.muted = true;
+
+    await processed.play();
+    const processedStream = (processed as any).captureStream();
+
     this.currentRecordingStream = new MediaStream([
-      this.localVideoTrack.mediaStreamTrack,
+      ...processedStream.getVideoTracks(),
       ...this.stream.getAudioTracks(),
     ]);
 
-    const processed = this.localVideoTrack.attach();
-    processed.muted = true;
-
     const container = this.videoContainer.nativeElement;
     container.replaceChildren(processed);
+
+    // const processed = this.localVideoTrack.attach();
+    // processed.muted = true;
+
+    // const container = this.videoContainer.nativeElement;
+    // container.replaceChildren(processed);
   }
 
   async disableBlur() {
@@ -223,6 +225,10 @@ export class Precheck implements OnInit {
       await this.enableBlur();
     } else {
       await this.disableBlur();
+    }
+    // fallback
+    if (!this.currentRecordingStream) {
+      this.currentRecordingStream = this.stream;
     }
     this.cdRef.detectChanges();
   }
@@ -420,36 +426,60 @@ export class Precheck implements OnInit {
   }
 
   playRecording() {
-    if (this.videoElement && this.videoElement.nativeElement && this.recordedBlobUrl) {
-      const video = this.videoElement.nativeElement;
-      video.srcObject = null;
-      video.src = this.recordedBlobUrl!;
-      video.muted = false;
-      video
-        .play()
-        .then(() => {
-          this.isPlaying = true;
-        })
-        .catch((err) => console.error('error playing recording:', err));
+    if (!this.recordedBlobUrl) return;
 
-      video.onended = () => {
-        this.isPlaying = false;
-      };
-    }
+    const container = this.videoContainer.nativeElement;
+    const player = container.firstChild as HTMLVideoElement;
+
+    if (!player) return;
+
+    player.srcObject = null;
+    player.src = this.recordedBlobUrl;
+    player.muted = false;
+    this.isPlaying = true;
+
+    player.play().catch((err) => {
+      this.isPlaying = false;
+      console.error('error playing recording:', err);
+    });
+    player.onpause = () => (this.isPlaying = false);
+    player.onended = () => {
+      this.isPlaying = false;
+    };
   }
 
   tryAgain() {
-    if (this.recordedBlobUrl) {
-      URL.revokeObjectURL(this.recordedBlobUrl!);
-      this.recordedBlobUrl = null;
-    }
-    this.recordedChunks = [];
     this.isPlaying = false;
 
-    if (this.videoElement && this.videoElement.nativeElement) {
-      this.videoElement.nativeElement.src = '';
-      this.videoElement.nativeElement.srcObject = this.stream;
-      this.videoElement.nativeElement.muted = true;
+    if (this.recordedBlobUrl) {
+      URL.revokeObjectURL(this.recordedBlobUrl);
+      this.recordedBlobUrl = null;
+    }
+
+    this.recordedChunks = [];
+    const container = this.videoContainer.nativeElement;
+    const player = container.firstChild as HTMLVideoElement;
+
+    if (player) {
+      player.pause();
+      player.src = '';
+      player.removeAttribute('src');
+      player.srcObject = null;
+
+      if (this.blur && this.localVideoTrack) {
+        const processed = this.localVideoTrack.attach() as HTMLVideoElement;
+
+        processed.muted = true;
+
+        container.replaceChildren(processed);
+        processed.play().catch(() => {});
+      } else if (this.stream) {
+        this.videoElement.nativeElement.src = '';
+        this.videoElement.nativeElement.srcObject = this.stream;
+        this.videoElement.nativeElement.muted = true;
+
+        container.replaceChildren(this.videoElement.nativeElement);
+      }
     }
 
     this.testState = 'idle';
@@ -457,6 +487,8 @@ export class Precheck implements OnInit {
     this.micStatus = 'pending';
     this.networkStatus = 'pending';
     this.hasAgreed = false;
+
+    this.cdRef.detectChanges();
   }
 
   joinMeeting() {
