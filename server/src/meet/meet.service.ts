@@ -9,7 +9,6 @@ interface RoomInfo {
   count: number;
   users: Map<string, UserState>;
 }
-
 @Injectable()
 export class MeetService {
   rooms = new Map<string, RoomInfo>();
@@ -32,73 +31,77 @@ export class MeetService {
   }
 
   joinMeet(meetId: string, identity: string) {
+    try {
+      if (!meetId) return { status: 400, message: 'meet id is required' };
+      if (!identity) return { status: 400, message: 'identity is required' };
+
+      const room = this.rooms.get(meetId);
+      if (!room) return { status: 404, message: 'room not found' };
+
+      if (room.count >= 2) {
+        return { status: 409, message: 'room is full' };
+      }
+      room.users.set(identity, 'in_room');
+      room.count++;
+      console.warn('people in room here', room.count);
+
+      const { AccessToken } = jwt;
+
+      const token = new AccessToken(
+        process.env.TWILIO_ACCOUNT_SID || '',
+        process.env.TWILIO_API_SID || '',
+        process.env.TWILIO_API_SECRET || '',
+        {
+          identity,
+          ttl: 3600,
+        },
+      );
+
+      token.addGrant(new VideoGrant({ room: meetId }));
+
+      return {
+        token: token.toJwt(),
+        meetId,
+        success: true,
+      };
+    } catch (error) {
+      console.log('error from meetService', error);
+    }
+  }
+
+  leaveMeet(meetId: string, identity: string) {
     if (!meetId) return { status: 400, message: 'meet id is required' };
     if (!identity) return { status: 400, message: 'identity is required' };
 
     const room = this.rooms.get(meetId);
     if (!room) return { status: 404, message: 'room not found' };
 
-    if (room.count >= 2) {
-      return { status: 409, message: 'room is full' };
-    }
-    room.users.set(identity, 'in_room');
-    room.count++;
-
-    const { AccessToken } = jwt;
-
-    const token = new AccessToken(
-      process.env.TWILIO_ACCOUNT_SID || '',
-      process.env.TWILIO_API_SID || '',
-      process.env.TWILIO_API_SECRET || '',
-      {
-        identity,
-        ttl: 3600,
-      },
-    );
-
-    token.addGrant(new VideoGrant({ room: meetId }));
-
-    return {
-      token: token.toJwt(),
-      meetId,
-      success: true,
-    };
-  }
-
-  leaveMeet(meetId: string, identity: string) {
-    if (!meetId) return { status: 400, message: 'meet id is required' };
-
-    const room = this.rooms.get(meetId);
-    if (!room) return { status: 404, message: 'room not found' };
-
-    if (identity) {
-      room.users.set(identity, 'left');
-    }
+    room.users.set(identity, 'left');
 
     if (room.count > 0) {
       room.count--;
     }
 
-    if (room.count === 0) {
-      this.rooms.delete(meetId);
-    }
+    // if (room.count === 0) {
+    //   this.rooms.delete(meetId);
+    // }
 
     return { status: 200, success: true };
   }
 
-  markDisconnected(meetId: string, identity: string) {
-    const room = this.rooms.get(meetId);
-    if (!room) return;
+  // markDisconnected(meetId: string, identity: string) {
+  //   const room = this.rooms.get(meetId);
+  //   if (!room) return;
 
-    room.users.set(identity, 'disconnected');
-  }
+  //   room.users.set(identity, 'disconnected');
+  // }
 
-  rejoin(meetId: string, identity: string) {
-    const room = this.rooms.get(meetId);
-    if (!room) return;
+  // rejoin(meetId: string, identity: string) {
+  //   const room = this.rooms.get(meetId);
+  //   if (!room) return;
 
-    room.users.set(identity, 'in_room');
-  }
+  //   room.users.set(identity, 'in_room');
+  // }
 
   isValidMeetId(meetId: string) {
     if (this.rooms.has(meetId)) {

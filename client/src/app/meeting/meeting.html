@@ -70,14 +70,16 @@
                     class="absolute cursor-pointer top-0 left-0" alt="">
             </section>
             <section>
-                <img [src]="isScreenSharing? 'screen-share-enabled.svg': 'Share screen.svg'"
+                <img class="cursor-pointer" [src]="isScreenSharing? 'screen-share-enabled.svg': 'Share screen.svg'"
                     (click)="toggleScreenShare()" alt="">
             </section>
             <section>
-                <img src="Mic (1).svg" alt="">
+                <img class="cursor-pointer" [src]="!isFullScreenOn? 'Mic (1).svg':'fullscreen-plus.svg'"
+                    (click)="fullScreen()" alt="">
             </section>
             <section>
-                <img (click)="leaveMeeting()" src="Icon button (2).svg" alt="" class="cursor-pointer">
+                <img class="cursor-pointer" (click)="leaveMeeting()" src="Icon button (2).svg" alt=""
+                    class="cursor-pointer">
             </section>
         </div>
         <div>

@@ -1,4 +1,4 @@
-import { Component, inject, ViewChild, ElementRef, OnInit } from '@angular/core';
+import { Component, inject, ViewChild, ElementRef, OnInit, NgZone } from '@angular/core';
 import { ChangeDetectorRef } from '@angular/core';
 import { Router, RouterModule } from '@angular/router';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
@@ -6,7 +6,7 @@ import { FormsModule } from '@angular/forms';
 import { MeetService } from '../services/meet.service';
 import { StateService } from '../services/state.service';
 import { faker } from '@faker-js/faker';
-import { connect, LocalVideoTrack, createLocalVideoTrack } from 'twilio-video';
+import { connect, LocalVideoTrack } from 'twilio-video';
 import { firstValueFrom } from 'rxjs';
 import type { GaussianBlurBackgroundProcessor } from '@twilio/video-processors';
 import { Popupcomponent } from '../popup/popup';
@@ -17,11 +17,12 @@ import { Popupcomponent } from '../popup/popup';
   templateUrl: './precheck.html',
   styleUrl: './precheck.css',
 })
-export class Precheck implements OnInit {
+export class Precheck {
   constructor(
     private meetService: MeetService,
     private stateService: StateService,
-    private cdRef: ChangeDetectorRef
+    private cdRef: ChangeDetectorRef,
+    private ngZone: NgZone
   ) {}
   private router = inject(Router);
 
@@ -67,7 +68,7 @@ export class Precheck implements OnInit {
     } else {
       await this.disableNoiseCancellation();
     }
-    this.cdRef.detectChanges();
+    // this.cdRef.detectChanges();
   }
   async enableNoiseCancellation() {
     const track = this.stream?.getAudioTracks()[0];
@@ -80,7 +81,7 @@ export class Precheck implements OnInit {
     });
 
     // this.videoElement.nativeElement.srcObject = this.stream;
-    this.cdRef.detectChanges();
+    // this.cdRef.detectChanges();
   }
 
   async disableNoiseCancellation() {
@@ -94,7 +95,7 @@ export class Precheck implements OnInit {
     });
 
     this.videoElement.nativeElement.srcObject = this.stream;
-    this.cdRef.detectChanges();
+    // this.cdRef.detectChanges();
   }
 
   async onDeviceChange(type: 'mic' | 'camera' | 'speaker', deviceId: string) {
@@ -102,7 +103,6 @@ export class Precheck implements OnInit {
       if (type === 'speaker') {
         this.selectedSpeaker = deviceId;
         if (this.videoElement.nativeElement.setSinkId) {
-          // @ts-ignore
           await this.videoElement.nativeElement.setSinkId(deviceId);
         }
         return;
@@ -145,11 +145,12 @@ export class Precheck implements OnInit {
       this.cameraStatus = 'failure';
     }
 
-    this.cdRef.detectChanges();
+    // this.cdRef.detectChanges();
   }
 
   ngOnInit() {
     this.startCamera();
+    console.log('ngoninit is called');
   }
 
   ngOnDestroy() {
@@ -208,7 +209,6 @@ export class Precheck implements OnInit {
     this.localVideoTrack.removeProcessor(this.blurProcessor);
     this.blurProcessor = undefined;
 
-    // back to original stream for recording
     this.currentRecordingStream = this.stream;
 
     const container = this.videoContainer.nativeElement;
@@ -230,7 +230,7 @@ export class Precheck implements OnInit {
     if (!this.currentRecordingStream) {
       this.currentRecordingStream = this.stream;
     }
-    this.cdRef.detectChanges();
+    // this.cdRef.detectChanges();
   }
 
   async startCamera() {
@@ -253,7 +253,7 @@ export class Precheck implements OnInit {
       }
       await this.getDevices();
     }
-    this.cdRef.detectChanges();
+    // this.cdRef.detectChanges();
   }
 
   async getDevices() {
@@ -276,7 +276,7 @@ export class Precheck implements OnInit {
     } catch (err) {
       console.error('Error enumerating devices:', err);
     }
-    this.cdRef.detectChanges();
+    // this.cdRef.detectChanges();
   }
 
   stopCamera() {
@@ -337,13 +337,12 @@ export class Precheck implements OnInit {
     }
 
     this.micStatus = 'checking';
-
-    const micWorks = await this.isAudioWorking();
-    this.micStatus = micWorks ? 'success' : 'failure';
-
     this.networkStatus = 'checking';
 
+    const micWorks = await this.isAudioWorking();
     const networkWorks = await this.checkNetworkSpeed();
+
+    this.micStatus = micWorks ? 'success' : 'failure';
     this.networkStatus = networkWorks ? 'success' : 'failure';
 
     if (
@@ -355,7 +354,8 @@ export class Precheck implements OnInit {
     } else {
       this.testState = 'completed';
     }
-    this.cdRef.detectChanges();
+
+    // this.cdRef.detectChanges();
   }
 
   isAudioWorking(): Promise<boolean> {
@@ -422,7 +422,7 @@ export class Precheck implements OnInit {
         resolve(false);
       }
     });
-    this.cdRef.detectChanges();
+    // this.cdRef.detectChanges();
   }
 
   playRecording() {
@@ -488,7 +488,7 @@ export class Precheck implements OnInit {
     this.networkStatus = 'pending';
     this.hasAgreed = false;
 
-    this.cdRef.detectChanges();
+    // this.cdRef.detectChanges();
   }
 
   joinMeeting() {
@@ -505,6 +505,7 @@ export class Precheck implements OnInit {
         next: (res) => {
           if (res.success && res.token) {
             this.stateService.setToken(res.token);
+            this.stateService.setIdentity(identity);
             console.log(meetId);
             this.router.navigateByUrl('/meeting');
           }

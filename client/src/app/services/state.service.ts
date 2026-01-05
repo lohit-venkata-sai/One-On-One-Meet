@@ -7,6 +7,7 @@ import { ChatMsg } from './socket.service';
 export class StateService {
   constructor() {}
   meetId: string | null = null;
+  identity: string | null = null;
   token: string | null = null;
 
   speakerId?: string | null;
@@ -27,6 +28,9 @@ export class StateService {
 
   setMeetId(meetId: string) {
     this.meetId = meetId;
+  }
+  setIdentity(identity: string) {
+    this.identity = identity;
   }
   setToken(token: string) {
     this.token = token;

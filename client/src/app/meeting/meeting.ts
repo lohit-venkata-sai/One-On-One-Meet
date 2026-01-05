@@ -22,6 +22,7 @@ import { GaussianBlurBackgroundProcessor } from '@twilio/video-processors';
 import { Popupcomponent } from '../popup/popup';
 import { ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { MeetService } from '../services/meet.service';
 
 @Component({
   selector: 'app-meeting',
@@ -51,12 +52,13 @@ export class Meeting implements OnInit, OnDestroy {
   chatMessages: ChatMsg[] = [];
 
   permissionRejected = false;
-
+  isFullScreenOn = false;
   constructor(
     private state: StateService,
     private router: Router,
     private socketService: SocketService,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private MeetService: MeetService
   ) {
     this.chatMessages = this.state.chatMessages;
     this.socketId = this.socketService.socket.id;
@@ -74,6 +76,16 @@ export class Meeting implements OnInit, OnDestroy {
       return;
     }
 
+    document.addEventListener('fullscreenchange', () => {
+      console.log('full screenTriggred');
+      this.isFullScreenOn = !!document.fullscreenElement;
+    });
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'F11') {
+        console.log('user pressed F11 to toggle browser fullscreen');
+        this.isFullScreenOn = !!document.fullscreenElement;
+      }
+    });
     try {
       console.log('Blur enabled:', this.blurEnabled);
       console.log('Noise cancellation enabled:', this.noiseCancellationEnabled);
@@ -253,6 +265,7 @@ export class Meeting implements OnInit, OnDestroy {
       screenMediaTrack.onended = () => {
         this.stopScreenShare();
       };
+      this.fullScreen();
     } catch (error) {
       console.log('error at start screen share', error);
     }
@@ -286,6 +299,14 @@ export class Meeting implements OnInit, OnDestroy {
     });
 
     this.room.disconnect();
+    this.MeetService.leaveMeet(this.state.meetId!, this.state.identity!).subscribe({
+      next: (res) => {
+        console.log('res from leave meet', res);
+      },
+      error: (error) => {
+        console.log('error from leave meet', error);
+      },
+    });
     this.router.navigateByUrl('/lobby');
   }
   sendMsg() {
@@ -303,4 +324,19 @@ export class Meeting implements OnInit, OnDestroy {
       room: this.state.meetId,
     });
   }
+  fullScreen() {
+    console.log('f11 triggered');
+    const elem = document.documentElement;
+
+    if (!document.fullscreenElement) {
+      elem.requestFullscreen();
+      this.isFullScreenOn = true;
+    } else {
+      document.exitFullscreen();
+      this.isFullScreenOn = false;
+    }
+  }
+  // checkFullscreen() {
+  //   this.isFullScreenOn = !!document.fullscreenElement;
+  // }
 }

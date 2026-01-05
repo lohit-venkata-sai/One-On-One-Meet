@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, NgZone } from '@angular/core';
 import { io, Socket } from 'socket.io-client';
 import { StateService } from './state.service';
 
@@ -6,7 +6,7 @@ import { StateService } from './state.service';
 export class SocketService {
   socket: Socket;
 
-  constructor(private stateService: StateService) {
+  constructor(private stateService: StateService, private ngZone: NgZone) {
     this.socket = io('http://localhost:3000');
 
     this.socket.on('connect', () => {
@@ -20,7 +20,7 @@ export class SocketService {
       if (message.socketId == this.socket.id) {
         return;
       }
-      this.stateService.addChatMsg(message);
+      ngZone.run(() => this.stateService.addChatMsg(message));
     });
   }
   // joinSocketRoom(room: any) {

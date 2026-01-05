@@ -15,13 +15,20 @@ export class MeetService {
   joinMeet(meetId: string, identity: string): Observable<JoinMeetResponse> {
     return this.http.post<JoinMeetResponse>(`${this.apiUrl}/join`, { meetId, identity });
   }
+  leaveMeet(meetId: string, identity: string): Observable<MeetValidationAndLeaveMeetResponse> {
+    return this.http.post<MeetValidationAndLeaveMeetResponse>(`${this.apiUrl}/leave`, {
+      meetId,
+      identity,
+    });
+  }
   isMeetIdvalid(meetId: string) {
-    return this.http.get<MeetValidationResponse>(`${this.apiUrl}/isvalid/${meetId}`);
+    return this.http.get<MeetValidationAndLeaveMeetResponse>(`${this.apiUrl}/isvalid/${meetId}`);
   }
 }
-export interface MeetValidationResponse {
-  success: boolean;
-  status?: number;
+export interface MeetValidationAndLeaveMeetResponse {
+  success?: boolean;
+  status: number;
+  message?: string;
 }
 export interface JoinMeetResponse {
   success: boolean;

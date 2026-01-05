@@ -12,7 +12,7 @@ export class MeetController {
 
   @Post('join')
   joinMeet(@Body() body: { meetId: string; identity: string }) {
-    console.log('join meet reaching');
+    // console.log('join meet reaching');
     return this.meetService.joinMeet(body.meetId, body.identity);
   }
   @Post('leave')
